@@ -8,1343 +8,910 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ═══════════════════════════════════════════════
+   ROOT & RESET
+═══════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --c-orange:#FF6A00;--c-red:#CC0000;--c-gold:#FFB300;--c-coral:#FF3D00;
+  --c-dark:#060608;--c-dark2:#0c0c10;--c-dark3:#13131a;
+  --c-glass:rgba(255,255,255,0.03);--c-glass2:rgba(255,255,255,0.06);
+  --c-border:rgba(255,106,0,0.18);--c-border2:rgba(255,179,0,0.15);
+  --shadow-glow:0 0 40px rgba(255,106,0,0.35),0 0 80px rgba(204,0,0,0.15);
+  --shadow-glow-lg:0 0 60px rgba(255,106,0,0.55),0 0 120px rgba(204,0,0,0.25);
+  --font-h:'Bebas Neue',sans-serif;--font-b:'DM Sans',sans-serif;
+  --radius:20px;--radius-sm:12px;--radius-pill:999px;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:var(--font-b);background:var(--c-dark);color:#e2e2e8;overflow-x:hidden;line-height:1.6}
 
-  :root {
-    --orange: #FF6A00;
-    --red: #CC0000;
-    --gold: #FFB300;
-    --coral: #FF3D00;
-    --dark: #080808;
-    --dark2: #0f0f0f;
-    --dark3: #161616;
-    --glass: rgba(255,255,255,0.04);
-    --glass-border: rgba(255,106,0,0.2);
-  }
+/* ═══════════════════════════════════════════════
+   GRAIN OVERLAY
+═══════════════════════════════════════════════ */
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:.5;mix-blend-mode:overlay;
+}
 
-  html { scroll-behavior: smooth; }
+/* ═══════════════════════════════════════════════
+   CANVAS
+═══════════════════════════════════════════════ */
+#cvs{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--dark);
-    color: #e8e8e8;
-    overflow-x: hidden;
-    position: relative;
-  }
+/* ═══════════════════════════════════════════════
+   SCROLL PROGRESS
+═══════════════════════════════════════════════ */
+#sp{
+  position:fixed;top:0;left:0;height:2px;width:0%;z-index:10000;
+  background:linear-gradient(90deg,var(--c-orange),var(--c-gold),var(--c-coral));
+  box-shadow:0 0 12px var(--c-orange),0 0 24px rgba(255,106,0,.4);
+  transition:width .08s linear;
+}
 
-  /* ─── NOISE GRAIN ─── */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0.6;
-  }
+/* ═══════════════════════════════════════════════
+   BACK TO TOP
+═══════════════════════════════════════════════ */
+#btt{
+  position:fixed;bottom:28px;right:28px;z-index:9990;
+  width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,106,0,.4);
+  background:rgba(6,6,8,.85);backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--c-orange);font-size:18px;cursor:pointer;
+  opacity:0;transform:translateY(12px);transition:opacity .3s,transform .3s,box-shadow .3s;
+  box-shadow:0 0 20px rgba(255,106,0,.2);
+}
+#btt.show{opacity:1;transform:translateY(0)}
+#btt:hover{box-shadow:0 0 30px rgba(255,106,0,.5);border-color:var(--c-orange)}
 
-  /* ─── SCROLL PROGRESS ─── */
-  #scroll-progress {
-    position: fixed;
-    top: 0; left: 0;
-    width: 0%;
-    height: 3px;
-    background: linear-gradient(90deg, var(--orange), var(--gold), var(--coral));
-    z-index: 10000;
-    transition: width 0.1s linear;
-    box-shadow: 0 0 10px var(--orange);
-  }
+/* ═══════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════ */
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+section{position:relative;z-index:1}
 
-  /* ─── BACK TO TOP ─── */
-  #back-top {
-    position: fixed;
-    bottom: 30px; right: 30px;
-    width: 48px; height: 48px;
-    background: linear-gradient(135deg, var(--orange), var(--red));
-    border: none; border-radius: 50%;
-    color: #fff;
-    font-size: 20px;
-    cursor: pointer;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.3s, transform 0.3s;
-    z-index: 9998;
-    box-shadow: 0 0 20px rgba(255,106,0,0.5);
-    display: flex; align-items: center; justify-content: center;
-  }
-  #back-top.visible { opacity: 1; transform: translateY(0); }
-  #back-top:hover { box-shadow: 0 0 35px rgba(255,106,0,0.8); }
+/* ═══════════════════════════════════════════════
+   TYPOGRAPHY
+═══════════════════════════════════════════════ */
+.h1{font-family:var(--font-h);font-size:clamp(56px,11vw,130px);line-height:.88;letter-spacing:-.5px}
+.h2{font-family:var(--font-h);font-size:clamp(38px,7vw,80px);line-height:.95}
+.h3{font-family:var(--font-h);font-size:clamp(26px,4vw,40px);line-height:1}
+.label{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--c-orange)}
 
-  /* ─── CANVAS ─── */
-  #particle-canvas {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 0;
-  }
+/* ═══════════════════════════════════════════════
+   GRADIENT TEXT
+═══════════════════════════════════════════════ */
+.gt{
+  background:linear-gradient(90deg,var(--c-orange) 0%,var(--c-gold) 35%,var(--c-coral) 65%,var(--c-orange) 100%);
+  background-size:250% 100%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:gtShift 5s linear infinite;
+}
+@keyframes gtShift{0%{background-position:0% 50%}100%{background-position:250% 50%}}
 
-  /* ─── SECTION BASE ─── */
-  section { position: relative; z-index: 1; }
+/* ═══════════════════════════════════════════════
+   REVEAL ANIMATIONS
+═══════════════════════════════════════════════ */
+.rv{opacity:0;transform:translateY(36px);transition:opacity .75s ease,transform .75s ease}
+.rv.on{opacity:1;transform:translateY(0)}
+.rv-l{opacity:0;transform:translateX(-40px);transition:opacity .7s ease,transform .7s ease}
+.rv-l.on{opacity:1;transform:translateX(0)}
+.rv-r{opacity:0;transform:translateX(40px);transition:opacity .7s ease,transform .7s ease}
+.rv-r.on{opacity:1;transform:translateX(0)}
+.rv-clip{clip-path:inset(0 100% 0 0);transition:clip-path 1s cubic-bezier(.16,1,.3,1)}
+.rv-clip.on{clip-path:inset(0 0% 0 0)}
 
-  .container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 20px;
-  }
+/* ═══════════════════════════════════════════════
+   CTA BUTTON
+═══════════════════════════════════════════════ */
+.cta{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  font-family:var(--font-h);font-size:clamp(18px,2.5vw,24px);letter-spacing:2.5px;
+  color:#fff;text-decoration:none;
+  padding:20px 52px;border-radius:var(--radius-pill);border:none;cursor:pointer;
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--c-orange) 0%,var(--c-coral) 55%,var(--c-red) 100%);
+  box-shadow:var(--shadow-glow);
+  animation:ctaGlow 3s ease-in-out infinite;
+  transition:transform .2s;
+}
+.cta::before{
+  content:'';position:absolute;inset:-2px;border-radius:var(--radius-pill);z-index:-1;
+  background:conic-gradient(from 0deg,var(--c-orange),var(--c-gold),var(--c-coral),var(--c-red),var(--c-orange));
+  animation:spin 4s linear infinite;
+}
+.cta::after{
+  content:'';position:absolute;inset:1.5px;border-radius:var(--radius-pill);
+  background:linear-gradient(135deg,var(--c-orange),var(--c-coral),var(--c-red));
+  z-index:0;
+}
+.cta span{position:relative;z-index:1}
+.cta:hover{transform:scale(1.03)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes ctaGlow{
+  0%,100%{box-shadow:0 0 30px rgba(255,106,0,.45),0 0 60px rgba(255,106,0,.15)}
+  50%{box-shadow:0 0 55px rgba(255,106,0,.8),0 0 110px rgba(255,106,0,.3),0 0 180px rgba(204,0,0,.15)}
+}
+.ripple{
+  position:absolute;border-radius:50%;background:rgba(255,255,255,.28);
+  transform:scale(0);animation:rpl .65s linear;pointer-events:none;z-index:2;
+}
+@keyframes rpl{to{transform:scale(5);opacity:0}}
 
-  /* ─── GRADIENT TEXT ─── */
-  .grad-text {
-    background: linear-gradient(90deg, var(--orange), var(--gold), var(--coral), var(--orange));
-    background-size: 300% 100%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: gradShift 4s linear infinite;
-  }
-  @keyframes gradShift {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 300% 50%; }
-  }
+/* ═══════════════════════════════════════════════
+   GLASS CARD
+═══════════════════════════════════════════════ */
+.card{
+  background:var(--c-glass);backdrop-filter:blur(14px);
+  border:1px solid var(--c-border);border-radius:var(--radius);
+  transition:transform .35s,box-shadow .35s,border-color .35s;
+}
+.card:hover{
+  transform:translateY(-8px);
+  box-shadow:0 24px 60px rgba(255,106,0,.15);
+  border-color:rgba(255,106,0,.4);
+}
 
-  /* ─── REVEAL ANIMATION ─── */
-  .reveal {
-    opacity: 0;
-    transform: translateY(40px);
-    transition: opacity 0.7s ease, transform 0.7s ease;
-  }
-  .reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .reveal-clip {
-    clip-path: inset(0 100% 0 0);
-    transition: clip-path 0.9s cubic-bezier(0.16,1,0.3,1);
-  }
-  .reveal-clip.visible {
-    clip-path: inset(0 0% 0 0);
-  }
+/* ═══════════════════════════════════════════════
+   GRADIENT BORDER CARD
+═══════════════════════════════════════════════ */
+.gcard{
+  background:var(--c-glass);backdrop-filter:blur(14px);
+  border-radius:var(--radius);position:relative;
+  transition:transform .35s,box-shadow .35s;
+}
+.gcard::before{
+  content:'';position:absolute;inset:0;border-radius:var(--radius);padding:1.5px;
+  background:linear-gradient(135deg,var(--c-orange),var(--c-gold),var(--c-coral),var(--c-red));
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  opacity:.7;transition:opacity .35s;
+}
+.gcard:hover{transform:translateY(-8px);box-shadow:0 24px 60px rgba(255,106,0,.18)}
+.gcard:hover::before{opacity:1}
 
-  /* ─── CTA BUTTON ─── */
-  .cta-btn {
-    display: inline-block;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(18px, 3vw, 26px);
-    letter-spacing: 2px;
-    color: #fff;
-    background: linear-gradient(135deg, var(--orange) 0%, var(--coral) 50%, var(--red) 100%);
-    border: none;
-    padding: 18px 48px;
-    border-radius: 60px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    text-decoration: none;
-    text-align: center;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 0 30px rgba(255,106,0,0.5), 0 0 60px rgba(255,106,0,0.2);
-    animation: ctaPulse 2.5s ease-in-out infinite;
-  }
-  @keyframes ctaPulse {
-    0%, 100% { box-shadow: 0 0 30px rgba(255,106,0,0.5), 0 0 60px rgba(255,106,0,0.2); }
-    50% { box-shadow: 0 0 50px rgba(255,106,0,0.9), 0 0 100px rgba(255,106,0,0.4); }
-  }
-  .cta-btn::before {
-    content: '';
-    position: absolute;
-    inset: -3px;
-    background: conic-gradient(from 0deg, var(--orange), var(--gold), var(--coral), var(--orange));
-    border-radius: 63px;
-    z-index: -1;
-    animation: rotateBorder 3s linear infinite;
-  }
-  @keyframes rotateBorder {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-  .cta-btn:hover { transform: scale(1.04); }
-  .cta-btn .ripple {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.3);
-    transform: scale(0);
-    animation: rippleAnim 0.6s linear;
-    pointer-events: none;
-  }
-  @keyframes rippleAnim {
-    to { transform: scale(4); opacity: 0; }
-  }
+/* ═══════════════════════════════════════════════
+   ══ HERO ══
+═══════════════════════════════════════════════ */
+#hero{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:140px 24px 100px;
+  background:radial-gradient(ellipse 120% 70% at 50% 100%,rgba(204,0,0,.12) 0%,transparent 60%),
+             radial-gradient(ellipse 80% 50% at 50% 0%,rgba(255,106,0,.07) 0%,transparent 70%);
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,106,0,.08);border:1px solid rgba(255,106,0,.25);
+  color:var(--c-gold);font-size:12px;font-weight:600;letter-spacing:3px;
+  text-transform:uppercase;padding:9px 22px;border-radius:var(--radius-pill);
+  margin-bottom:32px;animation:eyebrowFloat 3.5s ease-in-out infinite;
+}
+@keyframes eyebrowFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 
-  /* ─── HERO ─── */
-  #hero {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 120px 20px 80px;
-    position: relative;
-    overflow: hidden;
-  }
-  #hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at 50% 60%, rgba(204,0,0,0.15) 0%, rgba(255,106,0,0.08) 40%, transparent 70%);
-    animation: heroBg 8s ease-in-out infinite alternate;
-    pointer-events: none;
-  }
-  @keyframes heroBg {
-    from { transform: scale(1) translateY(0); }
-    to { transform: scale(1.1) translateY(-20px); }
-  }
+.hero-title{margin-bottom:28px;filter:drop-shadow(0 0 50px rgba(255,106,0,.25));animation:titleFire 4s ease-in-out infinite alternate}
+@keyframes titleFire{
+  from{filter:drop-shadow(0 0 30px rgba(255,106,0,.2))}
+  to{filter:drop-shadow(0 0 70px rgba(255,106,0,.6)) drop-shadow(0 0 140px rgba(204,0,0,.25))}
+}
 
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255,106,0,0.12);
-    border: 1px solid rgba(255,106,0,0.3);
-    color: var(--gold);
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding: 8px 20px;
-    border-radius: 30px;
-    margin-bottom: 28px;
-    animation: badgeBounce 3s ease-in-out infinite;
-  }
-  @keyframes badgeBounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-  }
+.hero-sub{
+  font-size:clamp(16px,2.2vw,21px);color:rgba(255,255,255,.65);
+  max-width:580px;margin:0 auto 44px;min-height:68px;
+}
 
-  .hero-headline {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(54px, 10vw, 120px);
-    line-height: 0.9;
-    margin-bottom: 24px;
-    position: relative;
-    filter: drop-shadow(0 0 40px rgba(255,106,0,0.3));
-    animation: fireText 3s ease-in-out infinite alternate;
-  }
-  @keyframes fireText {
-    from { filter: drop-shadow(0 0 30px rgba(255,106,0,0.3)); }
-    to { filter: drop-shadow(0 0 60px rgba(255,106,0,0.7)) drop-shadow(0 0 100px rgba(204,0,0,0.3)); }
-  }
+/* Countdown */
+.cd-wrap{margin:36px 0}
+.cd-eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--c-orange);font-weight:700;margin-bottom:16px}
+.cd-row{display:flex;gap:12px;justify-content:center;align-items:flex-start}
+.cd-unit{display:flex;flex-direction:column;align-items:center;gap:5px}
+.cd-digit{
+  width:76px;height:76px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-h);font-size:40px;color:var(--c-gold);
+  background:var(--c-dark3);border:1px solid rgba(255,106,0,.35);border-radius:12px;
+  box-shadow:0 0 20px rgba(255,106,0,.2),inset 0 1px 0 rgba(255,255,255,.04);
+  position:relative;overflow:hidden;
+}
+.cd-digit::after{content:'';position:absolute;width:100%;height:1px;background:rgba(255,106,0,.3);top:50%}
+.cd-lbl{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.3)}
+.cd-sep{font-family:var(--font-h);font-size:42px;color:var(--c-orange);padding-top:4px;animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
 
-  .hero-sub {
-    font-size: clamp(16px, 2.5vw, 22px);
-    color: rgba(255,255,255,0.75);
-    max-width: 620px;
-    margin: 0 auto 40px;
-    line-height: 1.6;
-    min-height: 60px;
-  }
+/* Hero badges */
+.hero-tags{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:30px}
+.htag{
+  display:flex;align-items:center;gap:7px;font-size:12.5px;color:rgba(255,255,255,.7);
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
+  padding:8px 18px;border-radius:var(--radius-pill);
+}
+.htag em{font-style:normal;font-size:15px}
 
-  .hero-badges-row {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 28px;
-  }
-  .mini-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 8px 16px;
-    border-radius: 30px;
-    font-size: 13px;
-    color: rgba(255,255,255,0.8);
-  }
-  .mini-badge span { font-size: 16px; }
+/* ═══════════════════════════════════════════════
+   ══ PAIN ══
+═══════════════════════════════════════════════ */
+#pain{padding:110px 0;background:linear-gradient(180deg,var(--c-dark) 0%,var(--c-dark2) 50%,var(--c-dark) 100%)}
+.pain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:18px;margin-top:60px}
+.pain-card{padding:30px 26px}
+.pain-icon{font-size:34px;margin-bottom:16px;display:block}
+.pain-card h3{font-size:16px;font-weight:700;color:#fff;margin-bottom:8px}
+.pain-card p{font-size:13.5px;color:rgba(255,255,255,.55);line-height:1.7}
 
-  /* ─── COUNTDOWN ─── */
-  #countdown-wrap {
-    margin: 36px 0;
-  }
-  .countdown-label {
-    font-size: 13px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--orange);
-    margin-bottom: 14px;
-    font-weight: 600;
-  }
-  .countdown {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    align-items: center;
-  }
-  .cd-unit {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-  .cd-box {
-    background: var(--dark3);
-    border: 1px solid var(--orange);
-    border-radius: 10px;
-    width: 72px;
-    height: 72px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 38px;
-    color: var(--gold);
-    box-shadow: 0 0 20px rgba(255,106,0,0.3), inset 0 0 20px rgba(255,106,0,0.05);
-    position: relative;
-    overflow: hidden;
-  }
-  .cd-box::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 1px;
-    background: rgba(255,106,0,0.4);
-    top: 50%;
-  }
-  .cd-label {
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.4);
-  }
-  .cd-sep {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 40px;
-    color: var(--orange);
-    margin-bottom: 20px;
-    animation: blink 1s step-end infinite;
-  }
-  @keyframes blink { 50% { opacity: 0; } }
+/* ═══════════════════════════════════════════════
+   ══ PRODUCT ══
+═══════════════════════════════════════════════ */
+#product{padding:110px 0}
+.product-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+@media(max-width:760px){.product-grid{grid-template-columns:1fr}}
 
-  /* ─── PAIN SECTION ─── */
-  #pain {
-    padding: 100px 0;
-    background: linear-gradient(180deg, var(--dark) 0%, var(--dark2) 50%, var(--dark) 100%);
-  }
-  .section-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(36px, 6vw, 68px);
-    line-height: 1.05;
-    margin-bottom: 20px;
-  }
-  .section-sub {
-    font-size: 17px;
-    color: rgba(255,255,255,0.6);
-    margin-bottom: 60px;
-    max-width: 600px;
-  }
-  .pain-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
-  }
-  .pain-card {
-    background: var(--glass);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(204,0,0,0.2);
-    border-radius: 16px;
-    padding: 28px 24px;
-    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
-  }
-  .pain-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 10px 40px rgba(204,0,0,0.2);
-    border-color: rgba(204,0,0,0.5);
-  }
-  .pain-icon { font-size: 32px; margin-bottom: 14px; }
-  .pain-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: #fff; }
-  .pain-card p { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+/* Phone Mockup */
+.phone-wrap{position:relative;max-width:270px;margin:0 auto}
+.phone-outer{
+  width:100%;aspect-ratio:9/19.5;
+  background:linear-gradient(160deg,#1c1c24,#0a0a0e);
+  border-radius:44px;border:1.5px solid rgba(255,106,0,.25);
+  box-shadow:
+    0 0 0 8px rgba(0,0,0,.6),
+    0 0 0 9px rgba(255,106,0,.08),
+    0 0 60px rgba(255,106,0,.2),
+    0 0 120px rgba(204,0,0,.1),
+    inset 0 0 40px rgba(0,0,0,.9);
+  position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+  animation:phoneHover 5s ease-in-out infinite;
+}
+@keyframes phoneHover{0%,100%{transform:translateY(0) rotate(-.5deg)}50%{transform:translateY(-12px) rotate(.5deg)}}
+.phone-notch{
+  width:90px;height:28px;background:#0a0a0e;
+  border-radius:0 0 18px 18px;margin-top:10px;
+  border:1px solid rgba(255,255,255,.04);border-top:none;flex-shrink:0;
+}
+.phone-screen{flex:1;width:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;padding:12px 18px 24px}
+.phone-glow-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 85%,rgba(255,106,0,.12) 0%,transparent 60%);animation:pgb 3s ease-in-out infinite alternate}
+@keyframes pgb{from{opacity:.5}to{opacity:1}}
+.phone-viral{
+  font-family:var(--font-h);font-size:58px;line-height:1;
+  background:linear-gradient(135deg,var(--c-orange),var(--c-gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:vPulse 2s ease-in-out infinite;
+}
+@keyframes vPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.phone-stat-box{
+  background:rgba(255,106,0,.07);border:1px solid rgba(255,106,0,.2);
+  border-radius:10px;padding:10px 14px;width:100%;text-align:center;
+}
+.phone-stat-val{font-family:var(--font-h);font-size:26px;color:#4ade80;display:block}
+.phone-stat-lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.35)}
+.phone-badge{font-size:10px;letter-spacing:2px;color:rgba(255,179,0,.7);text-transform:uppercase}
+.phone-aura{
+  position:absolute;bottom:-40px;left:50%;transform:translateX(-50%);
+  width:200px;height:80px;
+  background:radial-gradient(ellipse at 50% 100%,rgba(255,106,0,.35) 0%,transparent 70%);
+  pointer-events:none;
+}
 
-  /* ─── PRODUCT SECTION ─── */
-  #product {
-    padding: 100px 0;
-  }
-  .product-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 60px;
-    align-items: center;
-  }
-  @media (max-width: 768px) { .product-grid { grid-template-columns: 1fr; } }
+/* Product list */
+.plist{list-style:none}
+.plist li{display:flex;align-items:flex-start;gap:14px;padding:15px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:15px;color:rgba(255,255,255,.82)}
+.plist li:last-child{border-bottom:none}
+.pcheck{
+  width:26px;height:26px;flex-shrink:0;border-radius:50%;margin-top:1px;
+  background:linear-gradient(135deg,var(--c-orange),var(--c-red));
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+  box-shadow:0 0 12px rgba(255,106,0,.45);
+}
 
-  .phone-mockup {
-    position: relative;
-    max-width: 280px;
-    margin: 0 auto;
-  }
-  .phone-frame {
-    width: 100%;
-    aspect-ratio: 9/19;
-    background: linear-gradient(160deg, #1a1a1a 0%, #0a0a0a 100%);
-    border-radius: 40px;
-    border: 2px solid rgba(255,106,0,0.3);
-    box-shadow: 0 0 60px rgba(255,106,0,0.2), 0 0 120px rgba(204,0,0,0.1), inset 0 0 40px rgba(0,0,0,0.8);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .phone-frame::before {
-    content: '';
-    position: absolute;
-    top: 16px; left: 50%;
-    transform: translateX(-50%);
-    width: 80px; height: 10px;
-    background: #111;
-    border-radius: 10px;
-  }
-  .phone-screen-content {
-    text-align: center;
-    padding: 20px;
-  }
-  .phone-viral {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 52px;
-    line-height: 1;
-    background: linear-gradient(135deg, var(--orange), var(--gold));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: viralPulse 2s ease-in-out infinite;
-  }
-  @keyframes viralPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
-  .phone-stat { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 8px; letter-spacing: 2px; }
-  .phone-stat strong { color: var(--orange); display: block; font-size: 22px; font-family: 'Bebas Neue', sans-serif; }
-  .phone-glow {
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at 50% 80%, rgba(255,106,0,0.15) 0%, transparent 60%);
-    animation: phoneGlow 3s ease-in-out infinite alternate;
-  }
-  @keyframes phoneGlow {
-    from { opacity: 0.5; }
-    to { opacity: 1; }
-  }
+/* ═══════════════════════════════════════════════
+   ══ BONUS ══
+═══════════════════════════════════════════════ */
+#bonus{padding:110px 0;background:var(--c-dark2)}
+.bonus-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;margin-top:64px}
+.bonus-card{padding:38px 30px}
+.bonus-unlock-icon{font-size:44px;display:block;margin-bottom:18px;transition:transform .5s}
+.bonus-card.unlocked .bonus-unlock-icon{animation:unlock .7s cubic-bezier(.34,1.56,.64,1)}
+@keyframes unlock{0%{transform:rotate(-15deg) scale(.7)}60%{transform:rotate(8deg) scale(1.25)}100%{transform:rotate(0) scale(1)}}
+.bonus-tag{
+  display:inline-block;font-size:10px;font-weight:700;letter-spacing:2.5px;
+  text-transform:uppercase;color:var(--c-orange);
+  background:rgba(255,106,0,.09);border:1px solid rgba(255,106,0,.25);
+  padding:5px 14px;border-radius:var(--radius-pill);margin-bottom:16px;
+}
+.bonus-card h3{font-family:var(--font-h);font-size:30px;color:#fff;margin-bottom:12px;line-height:1.05}
+.bonus-card p{font-size:14px;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:22px}
+.bonus-val{display:flex;align-items:center;gap:12px}
+.bonus-old{text-decoration:line-through;color:rgba(255,255,255,.28);font-size:17px}
+.bonus-free{font-family:var(--font-h);font-size:28px;color:var(--c-gold);letter-spacing:1px}
 
-  .product-list { list-style: none; }
-  .product-list li {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 16px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    font-size: 15px;
-    line-height: 1.5;
-    color: rgba(255,255,255,0.85);
-  }
-  .product-list li:last-child { border-bottom: none; }
-  .check-icon {
-    width: 24px; height: 24px;
-    background: linear-gradient(135deg, var(--orange), var(--red));
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    font-size: 12px;
-    margin-top: 1px;
-    box-shadow: 0 0 10px rgba(255,106,0,0.4);
-  }
+/* ═══════════════════════════════════════════════
+   ══ TESTIMONIALS ══
+═══════════════════════════════════════════════ */
+#testi{padding:110px 0}
+.testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:22px;margin-top:64px}
+.tcard{padding:28px 24px;border:1px solid rgba(255,255,255,.07)}
+.tcard:hover{border-color:rgba(255,106,0,.3)}
+.tcard-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.avatar{
+  width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-h);font-size:22px;color:#fff;flex-shrink:0;
+  box-shadow:0 0 20px rgba(255,106,0,.25);
+}
+.tcard-name{font-weight:700;font-size:15px;color:#fff}
+.tcard-handle{font-size:12px;color:rgba(255,255,255,.38)}
+.stars{color:var(--c-gold);font-size:13px;margin-bottom:10px;letter-spacing:2px}
+.tcard p{font-size:14px;color:rgba(255,255,255,.72);line-height:1.7}
+.tresult{
+  margin-top:16px;padding:10px 14px;font-size:12.5px;font-weight:600;color:var(--c-gold);
+  background:rgba(255,179,0,.07);border-left:3px solid var(--c-orange);border-radius:0 8px 8px 0;
+}
 
-  /* ─── BONUS SECTION ─── */
-  #bonus {
-    padding: 100px 0;
-    background: var(--dark2);
-  }
-  .bonus-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 24px;
-    margin-top: 60px;
-  }
-  .bonus-card {
-    background: var(--glass);
-    backdrop-filter: blur(12px);
-    border-radius: 20px;
-    padding: 36px 28px;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.3s, box-shadow 0.3s;
-  }
-  .bonus-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    padding: 1.5px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, var(--orange), var(--gold), var(--coral), var(--red));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-  }
-  .bonus-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 60px rgba(255,106,0,0.2);
-  }
-  .lock-icon {
-    font-size: 40px;
-    margin-bottom: 16px;
-    display: block;
-    transition: transform 0.5s;
-  }
-  .bonus-card.unlocked .lock-icon { animation: unlockBounce 0.6s ease; }
-  @keyframes unlockBounce {
-    0% { transform: rotate(-10deg) scale(0.8); }
-    50% { transform: rotate(10deg) scale(1.2); }
-    100% { transform: rotate(0deg) scale(1); }
-  }
-  .bonus-tag {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--orange);
-    background: rgba(255,106,0,0.1);
-    border: 1px solid rgba(255,106,0,0.3);
-    padding: 4px 12px;
-    border-radius: 20px;
-    margin-bottom: 14px;
-  }
-  .bonus-card h3 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px;
-    color: #fff;
-    margin-bottom: 10px;
-    line-height: 1.1;
-  }
-  .bonus-card p { font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.6; margin-bottom: 20px; }
-  .bonus-value {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .bonus-old { text-decoration: line-through; color: rgba(255,255,255,0.3); font-size: 16px; }
-  .bonus-free {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 26px;
-    color: var(--gold);
-    letter-spacing: 1px;
-  }
+/* ═══════════════════════════════════════════════
+   ══ FOR WHO ══
+═══════════════════════════════════════════════ */
+#forwho{padding:110px 0;background:var(--c-dark2)}
+.fw-grid{display:grid;grid-template-columns:1fr 1fr;gap:44px;margin-top:64px}
+@media(max-width:640px){.fw-grid{grid-template-columns:1fr}}
+.fw-col h3{font-family:var(--font-h);font-size:26px;margin-bottom:22px;letter-spacing:.5px}
+.fw-col.yes h3{color:#4ade80}.fw-col.no h3{color:#f87171}
+.fw-item{
+  display:flex;align-items:flex-start;gap:12px;padding:13px 0;
+  border-bottom:1px solid rgba(255,255,255,.05);
+  font-size:14.5px;color:rgba(255,255,255,.78);
+  opacity:0;transition:opacity .5s,transform .5s;
+}
+.fw-item.rv-l{transform:translateX(-28px)}
+.fw-item.rv-r{transform:translateX(28px)}
+.fw-item.on{opacity:1;transform:translateX(0)}
+.fw-icon{font-size:17px;flex-shrink:0;margin-top:1px}
 
-  /* ─── TESTIMONIALS ─── */
-  #testimonials {
-    padding: 100px 0;
-  }
-  .testi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
-    margin-top: 60px;
-  }
-  .testi-card {
-    background: var(--glass);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 20px;
-    padding: 28px 24px;
-    transition: transform 0.3s, border-color 0.3s;
-  }
-  .testi-card:hover {
-    transform: translateY(-5px);
-    border-color: rgba(255,106,0,0.3);
-  }
-  .testi-header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 18px;
-  }
-  .avatar {
-    width: 50px; height: 50px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    color: #fff;
-    flex-shrink: 0;
-    box-shadow: 0 0 20px rgba(255,106,0,0.3);
-  }
-  .testi-name { font-weight: 700; font-size: 15px; color: #fff; }
-  .testi-handle { font-size: 12px; color: rgba(255,255,255,0.4); }
-  .stars { color: var(--gold); font-size: 14px; margin-bottom: 12px; }
-  .testi-card p { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.65; }
-  .testi-result {
-    margin-top: 16px;
-    padding: 10px 14px;
-    background: rgba(255,106,0,0.08);
-    border-left: 3px solid var(--orange);
-    border-radius: 0 8px 8px 0;
-    font-size: 13px;
-    color: var(--gold);
-    font-weight: 600;
-  }
+/* ═══════════════════════════════════════════════
+   ══ PRICING ══
+═══════════════════════════════════════════════ */
+#pricing{padding:110px 0;text-align:center}
+.pbox{
+  max-width:720px;margin:48px auto 0;
+  padding:52px 44px;
+  background:linear-gradient(160deg,rgba(255,106,0,.05) 0%,rgba(204,0,0,.03) 100%);
+  border:1px solid rgba(255,106,0,.22);border-radius:28px;position:relative;overflow:hidden;
+}
+.pbox::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(255,106,0,.1) 0%,transparent 55%);pointer-events:none;
+}
+.pstack{list-style:none;margin-bottom:36px}
+.pstack li{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:13px 0;border-bottom:1px solid rgba(255,255,255,.06);
+  font-size:14.5px;color:rgba(255,255,255,.72);
+}
+.pstack li:last-child{border-bottom:none}
+.pstack .pval{color:var(--c-gold);font-weight:600;font-size:13px}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,106,0,.5),transparent);margin:24px 0}
+.p-total-lbl{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:6px}
+.p-strike1{font-size:24px;color:rgba(255,255,255,.25);text-decoration:line-through;margin-bottom:2px}
+.p-strike2{font-size:34px;color:rgba(255,255,255,.38);text-decoration:line-through;margin-bottom:10px}
+.p-tag{font-size:12px;color:var(--c-orange);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.p-main{font-family:var(--font-h);font-size:clamp(82px,14vw,120px);line-height:.85;letter-spacing:-3px;margin-bottom:6px}
+.p-curr{font-family:var(--font-h);font-size:36px;color:rgba(255,255,255,.45);vertical-align:super}
+.p-parcel{font-size:15px;color:rgba(255,255,255,.45);margin-bottom:6px}
+.p-parcel strong{color:rgba(255,255,255,.65)}
+.sec-row{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.sbadge{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.42)}
+.sbadge em{font-style:normal;font-size:15px}
+.guarantee{
+  margin-top:26px;padding:18px 20px;border:1px dashed rgba(255,255,255,.1);border-radius:var(--radius-sm);
+  font-size:13.5px;color:rgba(255,255,255,.55);line-height:1.65;
+}
+.guarantee strong{color:#4ade80}
 
-  /* ─── FOR WHO ─── */
-  #forwho {
-    padding: 100px 0;
-    background: var(--dark2);
-  }
-  .forwho-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    margin-top: 60px;
-  }
-  @media (max-width: 640px) { .forwho-grid { grid-template-columns: 1fr; } }
-  .forwho-col h3 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px;
-    margin-bottom: 24px;
-    letter-spacing: 1px;
-  }
-  .forwho-col.yes h3 { color: #4ade80; }
-  .forwho-col.no h3 { color: #f87171; }
-  .forwho-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    font-size: 15px;
-    color: rgba(255,255,255,0.8);
-    opacity: 0;
-    transform: translateX(-20px);
-    transition: opacity 0.4s, transform 0.4s;
-  }
-  .forwho-item.no-item { transform: translateX(20px); }
-  .forwho-item.visible { opacity: 1; transform: translateX(0); }
-  .forwho-item .fw-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+/* ═══════════════════════════════════════════════
+   ══ FAQ ══
+═══════════════════════════════════════════════ */
+#faq{padding:110px 0;background:var(--c-dark2)}
+.faq-list{max-width:740px;margin:60px auto 0}
+.fi{border:1px solid rgba(255,255,255,.07);border-radius:14px;margin-bottom:12px;overflow:hidden;transition:border-color .3s}
+.fi.open{border-color:rgba(255,106,0,.35)}
+.fq{
+  width:100%;background:var(--c-glass);border:none;padding:20px 24px;
+  text-align:left;color:#fff;font-family:var(--font-b);font-size:15.5px;font-weight:600;
+  cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;
+  transition:background .25s;
+}
+.fq:hover{background:var(--c-glass2)}
+.fa-arrow{
+  width:30px;height:30px;background:rgba(255,106,0,.08);border:1px solid rgba(255,106,0,.2);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:13px;color:var(--c-orange);transition:transform .4s;
+}
+.fi.open .fa-arrow{transform:rotate(180deg)}
+.fa{
+  max-height:0;overflow:hidden;font-size:14px;color:rgba(255,255,255,.6);line-height:1.75;
+  padding:0 24px;transition:max-height .45s ease,padding .45s ease;
+}
+.fi.open .fa{max-height:260px;padding:0 24px 20px}
 
-  /* ─── PRICING ─── */
-  #pricing {
-    padding: 100px 0;
-    text-align: center;
-  }
-  .price-box {
-    background: linear-gradient(160deg, rgba(255,106,0,0.06) 0%, rgba(204,0,0,0.04) 100%);
-    border: 1px solid rgba(255,106,0,0.25);
-    border-radius: 24px;
-    padding: 50px 40px;
-    max-width: 700px;
-    margin: 40px auto 0;
-    position: relative;
-    overflow: hidden;
-  }
-  .price-box::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at 50% 0%, rgba(255,106,0,0.12) 0%, transparent 60%);
-  }
-  .price-summary { list-style: none; margin-bottom: 36px; }
-  .price-summary li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    font-size: 15px;
-    color: rgba(255,255,255,0.75);
-  }
-  .price-summary li:last-child { border-bottom: none; }
-  .price-summary .item-val { color: var(--gold); font-weight: 600; font-size: 13px; }
-  .price-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--orange), transparent); margin: 24px 0; }
-  .price-old {
-    font-size: 22px;
-    color: rgba(255,255,255,0.3);
-    text-decoration: line-through;
-    margin-bottom: 4px;
-  }
-  .price-crossed {
-    font-size: 30px;
-    color: rgba(255,255,255,0.4);
-    text-decoration: line-through;
-    margin-bottom: 8px;
-  }
-  .price-main {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(70px, 12vw, 110px);
-    line-height: 0.9;
-    letter-spacing: -2px;
-  }
-  .price-tag {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 32px;
-    color: rgba(255,255,255,0.5);
-    vertical-align: super;
-    margin-right: 4px;
-  }
-  .price-parcel {
-    margin-top: 10px;
-    font-size: 15px;
-    color: rgba(255,255,255,0.5);
-  }
-  .security-badges {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 28px;
-  }
-  .sec-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: rgba(255,255,255,0.5);
-  }
-  .sec-badge span { font-size: 16px; }
-  .guarantee {
-    margin-top: 28px;
-    padding: 20px;
-    border: 1px dashed rgba(255,255,255,0.15);
-    border-radius: 12px;
-    font-size: 14px;
-    color: rgba(255,255,255,0.6);
-    line-height: 1.6;
-  }
-  .guarantee strong { color: #4ade80; }
+/* ═══════════════════════════════════════════════
+   ══ FOOTER ══
+═══════════════════════════════════════════════ */
+footer{padding:90px 0 44px;border-top:1px solid rgba(255,255,255,.05);text-align:center}
+.footer-h{font-family:var(--font-h);font-size:clamp(36px,6.5vw,70px);line-height:.95;margin-bottom:20px}
+.footer-sub{font-size:16px;color:rgba(255,255,255,.45);margin-bottom:34px}
+.footer-logo{font-family:var(--font-h);font-size:28px;letter-spacing:3px;margin-top:50px}
+.footer-copy{margin-top:12px;font-size:12px;color:rgba(255,255,255,.18)}
+.footer-legal{max-width:680px;margin:22px auto 0;font-size:11.5px;color:rgba(255,255,255,.22);line-height:1.7}
 
-  /* ─── FAQ ─── */
-  #faq {
-    padding: 100px 0;
-    background: var(--dark2);
-  }
-  .faq-list { max-width: 720px; margin: 60px auto 0; }
-  .faq-item {
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 14px;
-    margin-bottom: 12px;
-    overflow: hidden;
-    transition: border-color 0.3s;
-  }
-  .faq-item.open { border-color: rgba(255,106,0,0.35); }
-  .faq-q {
-    width: 100%;
-    background: var(--glass);
-    border: none;
-    padding: 20px 24px;
-    text-align: left;
-    color: #fff;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    transition: background 0.2s;
-  }
-  .faq-q:hover { background: rgba(255,255,255,0.05); }
-  .faq-arrow {
-    width: 28px; height: 28px;
-    background: rgba(255,106,0,0.1);
-    border: 1px solid rgba(255,106,0,0.2);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    font-size: 14px;
-    color: var(--orange);
-    transition: transform 0.4s;
-  }
-  .faq-item.open .faq-arrow { transform: rotate(180deg); }
-  .faq-a {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease, padding 0.4s ease;
-    font-size: 14px;
-    color: rgba(255,255,255,0.65);
-    line-height: 1.7;
-    padding: 0 24px;
-  }
-  .faq-item.open .faq-a {
-    max-height: 300px;
-    padding: 0 24px 20px;
-  }
+/* ═══════════════════════════════════════════════
+   SECTION DIVIDER
+═══════════════════════════════════════════════ */
+.fdiv{height:1px;background:linear-gradient(90deg,transparent,rgba(255,106,0,.3),transparent);margin:0}
+.flame-row{text-align:center;font-size:24px;padding:24px 0;letter-spacing:10px;opacity:.55}
 
-  /* ─── FOOTER ─── */
-  footer {
-    padding: 80px 0 40px;
-    border-top: 1px solid rgba(255,255,255,0.06);
-    text-align: center;
-  }
-  .footer-cta { margin-bottom: 50px; }
-  .footer-cta h2 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(36px, 6vw, 64px);
-    margin-bottom: 20px;
-  }
-  .footer-legal {
-    font-size: 12px;
-    color: rgba(255,255,255,0.25);
-    line-height: 1.7;
-    max-width: 700px;
-    margin: 30px auto 0;
-  }
-  .footer-copy {
-    margin-top: 30px;
-    font-size: 13px;
-    color: rgba(255,255,255,0.2);
-  }
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════ */
+@media(max-width:480px){
+  .cd-digit{width:58px;height:58px;font-size:30px}
+  .pbox{padding:36px 18px}
+  .cta{padding:18px 32px;font-size:17px}
+  #btt{bottom:20px;right:16px}
+  .phone-outer{border-radius:34px}
+}
+@media(max-width:900px){
+  .product-grid{grid-template-columns:1fr}
+  .phone-wrap{max-width:230px}
+}
 
-  /* ─── RESPONSIVE UTILS ─── */
-  @media (max-width: 480px) {
-    .cd-box { width: 56px; height: 56px; font-size: 28px; }
-    .price-box { padding: 36px 20px; }
-    #back-top { bottom: 20px; right: 20px; }
-  }
-
-  /* ─── SECTION DIVIDERS ─── */
-  .flame-divider {
-    text-align: center;
-    font-size: 28px;
-    padding: 20px 0;
-    opacity: 0.6;
-    letter-spacing: 8px;
-  }
+/* ═══════════════════════════════════════════════
+   SCROLL SNAP HINT
+═══════════════════════════════════════════════ */
+.scroll-hint{
+  position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  animation:shint 2s ease-in-out infinite;
+}
+@keyframes shint{0%,100%{transform:translateX(-50%) translateY(0);opacity:.6}50%{transform:translateX(-50%) translateY(8px);opacity:1}}
+.scroll-hint span{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35)}
+.scroll-chevron{width:22px;height:22px;border-right:1.5px solid rgba(255,106,0,.5);border-bottom:1.5px solid rgba(255,106,0,.5);transform:rotate(45deg)}
 </style>
 </head>
 <body>
 
 <!-- Scroll Progress -->
-<div id="scroll-progress"></div>
+<div id="sp"></div>
 
 <!-- Back to Top -->
-<button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Voltar ao topo">↑</button>
+<button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Topo">↑</button>
 
-<!-- Particle Canvas -->
-<canvas id="particle-canvas"></canvas>
+<!-- Canvas -->
+<canvas id="cvs"></canvas>
 
-<!-- ══════════════════════════════════════════════
+<!-- ════════════════════════════════
      HERO
-══════════════════════════════════════════════ -->
+════════════════════════════════ -->
 <section id="hero">
-  <div class="container">
-    <div class="hero-badge reveal">🔥 PACK EXCLUSIVO PARA INSTAGRAM</div>
+  <div class="wrap" style="position:relative">
+    <div class="hero-eyebrow rv">🔥 PACK EXCLUSIVO DE ALTA CONVERSÃO</div>
 
-    <h1 class="hero-headline reveal-clip">
-      <span class="grad-text">Vídeos Prontos.</span><br>
+    <h1 class="h1 hero-title rv-clip">
+      <span class="gt">Vídeos Prontos.</span><br>
       Post. Viraliza.<br>
-      <span class="grad-text">Fatura.</span>
+      <span class="gt">Fatura.</span>
     </h1>
 
-    <p class="hero-sub reveal" id="typewriter-target"></p>
+    <p class="hero-sub rv" id="tw"></p>
 
-    <div id="countdown-wrap" class="reveal">
-      <div class="countdown-label">⚡ Oferta expira em</div>
-      <div class="countdown">
-        <div class="cd-unit">
-          <div class="cd-box" id="cd-h">00</div>
-          <div class="cd-label">Horas</div>
-        </div>
+    <div class="cd-wrap rv">
+      <div class="cd-eyebrow">⚡ oferta encerra em</div>
+      <div class="cd-row">
+        <div class="cd-unit"><div class="cd-digit" id="cdh">00</div><div class="cd-lbl">horas</div></div>
         <div class="cd-sep">:</div>
-        <div class="cd-unit">
-          <div class="cd-box" id="cd-m">00</div>
-          <div class="cd-label">Min</div>
-        </div>
+        <div class="cd-unit"><div class="cd-digit" id="cdm">00</div><div class="cd-lbl">min</div></div>
         <div class="cd-sep">:</div>
-        <div class="cd-unit">
-          <div class="cd-box" id="cd-s">00</div>
-          <div class="cd-label">Seg</div>
-        </div>
+        <div class="cd-unit"><div class="cd-digit" id="cds">00</div><div class="cd-lbl">seg</div></div>
       </div>
     </div>
 
-    <a href="#pricing" class="cta-btn reveal" id="hero-cta">
-      🔥 QUERO MEU PACK AGORA — R$ 97
-    </a>
+    <div class="rv">
+      <a href="#pricing" class="cta" id="hero-cta"><span>🔥 QUERO MEU PACK — R$ 97</span></a>
+    </div>
 
-    <div class="hero-badges-row reveal">
-      <div class="mini-badge"><span>⚡</span> Acesso Imediato</div>
-      <div class="mini-badge"><span>💎</span> Pacote Premium</div>
-      <div class="mini-badge"><span>🔒</span> Pagamento Seguro</div>
-      <div class="mini-badge"><span>✅</span> Garantia 7 Dias</div>
+    <div class="hero-tags rv">
+      <div class="htag"><em>⚡</em> Acesso Imediato</div>
+      <div class="htag"><em>💎</em> Pack Premium</div>
+      <div class="htag"><em>🔒</em> Pagamento Seguro</div>
+      <div class="htag"><em>✅</em> Garantia 7 Dias</div>
+    </div>
+
+    <div class="scroll-hint">
+      <span>rolar</span>
+      <div class="scroll-chevron"></div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════
-     DOR / PROBLEMA
-══════════════════════════════════════════════ -->
+<div class="fdiv"></div>
+
+<!-- ════════════════════════════════
+     DOR
+════════════════════════════════ -->
 <section id="pain">
-  <div class="container">
-    <div style="text-align:center; margin-bottom:16px;">
-      <div class="flame-divider">🔥 🔥 🔥</div>
-    </div>
-    <h2 class="section-title reveal" style="text-align:center; max-width:800px; margin:0 auto 16px;">
-      Você já se perguntou por que alguns perfis<br>
-      <span class="grad-text">explodem</span> enquanto o seu fica estagnado?
-    </h2>
-    <p class="section-sub reveal" style="text-align:center; margin:0 auto 60px;">
-      A verdade é que não é falta de talento. É falta do conteúdo certo, na hora certa.
-    </p>
-
-    <div class="pain-grid">
-      <div class="pain-card reveal">
-        <div class="pain-icon">😩</div>
-        <h3>Horas perdidas criando do zero</h3>
-        <p>Você passa o dia inteiro editando um vídeo que não passa de 200 views. Enquanto isso, outros faturam dormindo.</p>
-      </div>
-      <div class="pain-card reveal" style="transition-delay:0.1s">
-        <div class="pain-icon">📉</div>
-        <h3>Algoritmo te ignorando</h3>
-        <p>Sua conta não cresce porque o conteúdo não tem o padrão que o Instagram reconhece como viral. Simples assim.</p>
-      </div>
-      <div class="pain-card reveal" style="transition-delay:0.2s">
-        <div class="pain-icon">🤯</div>
-        <h3>Sem saber o que postar</h3>
-        <p>Todo dia a mesma angústia: "O que eu posto hoje?" Enquanto concorrentes já têm meses de conteúdo prontos.</p>
-      </div>
-      <div class="pain-card reveal" style="transition-delay:0.3s">
-        <div class="pain-icon">💸</div>
-        <h3>Dinheiro na mesa todo mês</h3>
-        <p>Cada dia sem crescer é um dia sem faturar. Seguidores = audiência = dinheiro. A equação é simples — o acesso é que faltava.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════
-     PRODUTO
-══════════════════════════════════════════════ -->
-<section id="product">
-  <div class="container">
-    <div class="product-grid">
-      <div>
-        <h2 class="section-title reveal">
-          O Pack que vai transformar seu perfil numa<br>
-          <span class="grad-text">máquina de viralizar</span>
-        </h2>
-        <p style="font-size:16px; color:rgba(255,255,255,0.6); margin-bottom:32px;" class="reveal">
-          Conteúdo profissional, editado com estética dark premium e alta retenção — pronto para você baixar, postar e ver os números explodirem.
-        </p>
-        <ul class="product-list">
-          <li class="reveal">
-            <div class="check-icon">✓</div>
-            <span><strong style="color:#fff">Vídeos de Lifestyle Milionário</strong> — estética dark, editados para máxima retenção e desejo</span>
-          </li>
-          <li class="reveal" style="transition-delay:0.1s">
-            <div class="check-icon">✓</div>
-            <span><strong style="color:#fff">Alta retenção garantida</strong> — formato otimizado para o algoritmo do Reels e Stories</span>
-          </li>
-          <li class="reveal" style="transition-delay:0.15s">
-            <div class="check-icon">✓</div>
-            <span><strong style="color:#fff">Estética única e magnética</strong> — visual que para o scroll e cria obsessão imediata</span>
-          </li>
-          <li class="reveal" style="transition-delay:0.2s">
-            <div class="check-icon">✓</div>
-            <span><strong style="color:#fff">Funciona para qualquer nicho dark</strong> — afiliados, infoprodutos, conteúdo adulto permitido e mais</span>
-          </li>
-          <li class="reveal" style="transition-delay:0.25s">
-            <div class="check-icon">✓</div>
-            <span><strong style="color:#fff">Acesso imediato ao download</strong> — baixe agora e poste hoje mesmo</span>
-          </li>
-        </ul>
-      </div>
-      <div class="phone-mockup reveal">
-        <div class="phone-frame">
-          <div class="phone-glow"></div>
-          <div class="phone-screen-content">
-            <div class="phone-viral">VIRAL</div>
-            <div class="phone-stat">
-              <strong>🔥 2.4M</strong>
-              visualizações
-            </div>
-            <div style="margin-top:20px; padding:10px; border:1px solid rgba(255,106,0,0.3); border-radius:8px;">
-              <div style="font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:1px; margin-bottom:4px;">NOVOS SEGUIDORES</div>
-              <div style="font-family:'Bebas Neue',sans-serif; font-size:28px; color:#4ade80;">+1.847</div>
-              <div style="font-size:10px; color:rgba(255,255,255,0.3);">em 48 horas</div>
-            </div>
-            <div style="margin-top:16px; font-size:10px; color:rgba(255,179,0,0.7); letter-spacing:1px;">📲 INSTAMAGNÉTICO</div>
-          </div>
-        </div>
-        <div style="position:absolute; top:-20px; right:-20px; width:60px; height:60px; background:radial-gradient(circle, var(--orange), transparent); opacity:0.4; border-radius:50%; animation:phoneGlow 3s infinite;"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════
-     BÔNUS
-══════════════════════════════════════════════ -->
-<section id="bonus">
-  <div class="container">
-    <div style="text-align:center;">
-      <div class="flame-divider">🔒 🔒 🔒</div>
-      <h2 class="section-title reveal">
-        E ainda vai ganhar isso tudo de<br>
-        <span class="grad-text">BÔNUS</span> 🔥
+  <div class="wrap">
+    <div class="flame-row">🔥 🔥 🔥</div>
+    <div style="text-align:center">
+      <div class="label rv" style="margin-bottom:14px">O PROBLEMA QUE VOCÊ CONHECE BEM</div>
+      <h2 class="h2 rv" style="max-width:820px;margin:0 auto 16px">
+        Por que alguns perfis <span class="gt">explodem</span><br>enquanto o seu fica estagnado?
       </h2>
-      <p class="section-sub reveal" style="margin:0 auto;">
-        Só porque você chegou até aqui, estes bônus exclusivos estão sendo desbloqueados agora.
+      <p class="rv" style="font-size:17px;color:rgba(255,255,255,.5);max-width:550px;margin:0 auto">
+        Não é falta de talento. É falta do conteúdo magnético certo.
       </p>
     </div>
+    <div class="pain-grid">
+      <div class="card pain-card rv"><span class="pain-icon">😩</span><h3>Horas perdidas criando do zero</h3><p>Você passa o dia editando um vídeo que não passa de 200 views. Enquanto isso, outros faturam dormindo.</p></div>
+      <div class="card pain-card rv" style="transition-delay:.1s"><span class="pain-icon">📉</span><h3>Algoritmo te ignorando</h3><p>Seu conteúdo não tem o padrão que o Instagram reconhece como viral. O resultado: invisibilidade.</p></div>
+      <div class="card pain-card rv" style="transition-delay:.2s"><span class="pain-icon">🤯</span><h3>Sem saber o que postar</h3><p>Todo dia a mesma angústia. Enquanto isso, concorrentes já têm meses de conteúdo prontos esperando.</p></div>
+      <div class="card pain-card rv" style="transition-delay:.3s"><span class="pain-icon">💸</span><h3>Dinheiro na mesa todo mês</h3><p>Cada dia sem crescer é um dia sem faturar. Seguidores = audiência = dinheiro. Simples assim.</p></div>
+    </div>
+  </div>
+</section>
 
+<div class="fdiv"></div>
+
+<!-- ════════════════════════════════
+     PRODUTO
+════════════════════════════════ -->
+<section id="product">
+  <div class="wrap">
+    <div class="product-grid">
+      <div>
+        <div class="label rv" style="margin-bottom:14px">O QUE VOCÊ RECEBE</div>
+        <h2 class="h2 rv" style="margin-bottom:16px">
+          A <span class="gt">máquina</span><br>de viralizar<br>no Instagram
+        </h2>
+        <p class="rv" style="font-size:16px;color:rgba(255,255,255,.55);margin-bottom:32px;line-height:1.7">
+          Conteúdo profissional, editado com estética dark premium e alta retenção — pronto pra baixar, postar e ver os números explodirem.
+        </p>
+        <ul class="plist">
+          <li class="rv"><div class="pcheck">✓</div><span><strong style="color:#fff">Vídeos de Lifestyle Milionário</strong> — estética dark, editados pra máxima retenção e desejo imediato</span></li>
+          <li class="rv" style="transition-delay:.1s"><div class="pcheck">✓</div><span><strong style="color:#fff">Alta retenção garantida</strong> — formato otimizado pro algoritmo do Reels e Stories</span></li>
+          <li class="rv" style="transition-delay:.15s"><div class="pcheck">✓</div><span><strong style="color:#fff">Estética magnética única</strong> — visual que para o scroll e cria obsessão na audiência</span></li>
+          <li class="rv" style="transition-delay:.2s"><div class="pcheck">✓</div><span><strong style="color:#fff">Qualquer nicho dark</strong> — afiliados, infoprodutos, conteúdo adulto permitido e mais</span></li>
+          <li class="rv" style="transition-delay:.25s"><div class="pcheck">✓</div><span><strong style="color:#fff">Download imediato</strong> — baixe agora e poste hoje mesmo</span></li>
+        </ul>
+      </div>
+
+      <div class="phone-wrap rv-r">
+        <div class="phone-outer">
+          <div class="phone-glow-bg"></div>
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="phone-viral">VIRAL</div>
+            <div class="phone-stat-box">
+              <span class="phone-stat-val">🔥 2.4M</span>
+              <span class="phone-stat-lbl">visualizações</span>
+            </div>
+            <div class="phone-stat-box">
+              <span class="phone-stat-val" style="color:var(--c-gold)">+1.847</span>
+              <span class="phone-stat-lbl">seguidores em 48h</span>
+            </div>
+            <div class="phone-badge">📲 InstaMagnético</div>
+          </div>
+          <div class="phone-aura"></div>
+        </div>
+        <!-- Floating orbs -->
+        <div style="position:absolute;top:-30px;right:-30px;width:70px;height:70px;background:radial-gradient(circle,rgba(255,106,0,.4),transparent);border-radius:50%;animation:pgb 2.5s ease-in-out infinite;pointer-events:none"></div>
+        <div style="position:absolute;bottom:-20px;left:-20px;width:50px;height:50px;background:radial-gradient(circle,rgba(204,0,0,.35),transparent);border-radius:50%;animation:pgb 3.2s ease-in-out infinite .8s;pointer-events:none"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="fdiv"></div>
+
+<!-- ════════════════════════════════
+     BÔNUS
+════════════════════════════════ -->
+<section id="bonus">
+  <div class="wrap">
+    <div class="flame-row">🔒 🔒 🔒</div>
+    <div style="text-align:center">
+      <div class="label rv" style="margin-bottom:14px">EXCLUSIVO PARA QUEM ENTRA HOJE</div>
+      <h2 class="h2 rv" style="margin-bottom:14px">E ainda vai ganhar<br><span class="gt">tudo isso de BÔNUS</span> 🔥</h2>
+      <p class="rv" style="font-size:16px;color:rgba(255,255,255,.5);max-width:500px;margin:0 auto">
+        Só porque você chegou até aqui, estes bônus estão sendo desbloqueados agora.
+      </p>
+    </div>
     <div class="bonus-grid">
-      <div class="bonus-card reveal">
-        <span class="lock-icon" id="lock1">🎬</span>
+      <div class="gcard bonus-card rv">
+        <span class="bonus-unlock-icon">🎬</span>
         <div class="bonus-tag">Bônus 1 — Desbloqueado</div>
         <h3>Pack de Cenas de Filmes & Acontecimentos</h3>
-        <p>Cenas icônicas dos maiores filmes e acontecimentos virais da história. Adicione qualquer legenda, qualquer headline — e viraliza instantaneamente. O conteúdo já é magnético. Você só escolhe a mensagem.</p>
-        <div class="bonus-value">
-          <span class="bonus-old">R$ 197</span>
-          <span class="bonus-free">GRÁTIS 🎁</span>
-        </div>
+        <p>Cenas icônicas dos maiores filmes e acontecimentos virais da história. Adicione qualquer legenda — e viraliza instantaneamente. O conteúdo já é magnético. Você só escolhe a mensagem.</p>
+        <div class="bonus-val"><span class="bonus-old">R$ 197</span><span class="bonus-free">GRÁTIS 🎁</span></div>
       </div>
-
-      <div class="bonus-card reveal" style="transition-delay:0.15s">
-        <span class="lock-icon" id="lock2">🎯</span>
+      <div class="gcard bonus-card rv" style="transition-delay:.18s">
+        <span class="bonus-unlock-icon">🎯</span>
         <div class="bonus-tag">Bônus 2 — Desbloqueado</div>
         <h3>Acompanhamento Estratégico + Análise de Perfil</h3>
-        <p>Você não vai ficar sozinho. Orientação personalizada para crescer e monetizar seu perfil dark. Análise individual, estratégia sob medida para seu nicho e suporte direto. O atalho que ninguém te ofereceu.</p>
-        <div class="bonus-value">
-          <span class="bonus-old">R$ 203</span>
-          <span class="bonus-free">GRÁTIS 🎁</span>
-        </div>
+        <p>Orientação personalizada para crescer e monetizar seu perfil dark. Análise individual, estratégia sob medida pro seu nicho e suporte direto. O atalho que ninguém te ofereceu.</p>
+        <div class="bonus-val"><span class="bonus-old">R$ 203</span><span class="bonus-free">GRÁTIS 🎁</span></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════
+<div class="fdiv"></div>
+
+<!-- ════════════════════════════════
      DEPOIMENTOS
-══════════════════════════════════════════════ -->
-<section id="testimonials">
-  <div class="container">
-    <h2 class="section-title reveal" style="text-align:center;">
-      Quem usou,<br><span class="grad-text">não para mais</span>
-    </h2>
-
+════════════════════════════════ -->
+<section id="testi">
+  <div class="wrap">
+    <div style="text-align:center">
+      <div class="label rv" style="margin-bottom:14px">RESULTADOS REAIS</div>
+      <h2 class="h2 rv">Quem usou,<br><span class="gt">não para mais</span></h2>
+    </div>
     <div class="testi-grid">
-      <div class="testi-card reveal">
-        <div class="testi-header">
-          <div class="avatar" style="background:linear-gradient(135deg,#FF6A00,#CC0000);">MF</div>
-          <div>
-            <div class="testi-name">Mateus Ferreira</div>
-            <div class="testi-handle">@mateusf.dark</div>
-          </div>
+      <div class="card tcard rv">
+        <div class="tcard-head">
+          <div class="avatar" style="background:linear-gradient(135deg,#FF6A00,#CC0000)">MF</div>
+          <div><div class="tcard-name">Mateus Ferreira</div><div class="tcard-handle">@mateusf.dark</div></div>
         </div>
         <div class="stars">★★★★★</div>
-        <p>"Cara, eu tinha travado no mesmo número de seguidores por 3 meses. Baixei o pack, postei 5 vídeos em uma semana e explodiu. O algoritmo simplesmente te joga pra frente com esse tipo de conteúdo."</p>
-        <div class="testi-result">🚀 +1.200 seguidores em 7 dias</div>
+        <p>"Travei no mesmo número de seguidores por 3 meses. Baixei o pack, postei 5 vídeos em uma semana e explodiu. O algoritmo simplesmente te joga pra frente com esse conteúdo."</p>
+        <div class="tresult">🚀 +1.200 seguidores em 7 dias</div>
       </div>
-
-      <div class="testi-card reveal" style="transition-delay:0.12s">
-        <div class="testi-header">
-          <div class="avatar" style="background:linear-gradient(135deg,#FFB300,#FF3D00);">JA</div>
-          <div>
-            <div class="testi-name">Juliana Alves</div>
-            <div class="testi-handle">@ju.lifestyle.dark</div>
-          </div>
+      <div class="card tcard rv" style="transition-delay:.12s">
+        <div class="tcard-head">
+          <div class="avatar" style="background:linear-gradient(135deg,#FFB300,#FF3D00)">JA</div>
+          <div><div class="tcard-name">Juliana Alves</div><div class="tcard-handle">@ju.lifestyle.dark</div></div>
         </div>
         <div class="stars">★★★★★</div>
-        <p>"Na segunda semana já tinha feito R$ 500 de afiliado. Nunca tinha conseguido isso antes. A estética dos vídeos é absurda — as pessoas param e assistem até o fim. Retenção total."</p>
-        <div class="testi-result">💰 Primeiro R$ 500 na semana 2</div>
+        <p>"Na segunda semana já tinha feito R$ 500 de afiliado. Nunca tinha conseguido isso antes. A estética dos vídeos é absurda — as pessoas assistem até o fim. Retenção total."</p>
+        <div class="tresult">💰 Primeiro R$ 500 na semana 2</div>
       </div>
-
-      <div class="testi-card reveal" style="transition-delay:0.24s">
-        <div class="testi-header">
-          <div class="avatar" style="background:linear-gradient(135deg,#CC0000,#FF6A00);">RC</div>
-          <div>
-            <div class="testi-name">Rafael Costa</div>
-            <div class="testi-handle">@rafaelcosta.empire</div>
-          </div>
+      <div class="card tcard rv" style="transition-delay:.24s">
+        <div class="tcard-head">
+          <div class="avatar" style="background:linear-gradient(135deg,#CC0000,#FF6A00)">RC</div>
+          <div><div class="tcard-name">Rafael Costa</div><div class="tcard-handle">@rafaelcosta.empire</div></div>
         </div>
         <div class="stars">★★★★★</div>
-        <p>"Fui de 300 para 4.800 seguidores em um mês. Monetizei com produto digital e fechei R$ 1.400 sem ter aparecido uma vez no perfil. O pack de filmes então... é uma máquina de viralizar."</p>
-        <div class="testi-result">📲 De 300 para 4.800 em 30 dias</div>
+        <p>"Fui de 300 para 4.800 seguidores em um mês. Monetizei com produto digital e fechei R$ 1.400 sem aparecer uma vez no perfil. O pack de filmes é uma máquina de viralizar."</p>
+        <div class="tresult">📲 De 300 para 4.800 em 30 dias</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════
-     PARA QUEM É?
-══════════════════════════════════════════════ -->
+<div class="fdiv"></div>
+
+<!-- ════════════════════════════════
+     PARA QUEM
+════════════════════════════════ -->
 <section id="forwho">
-  <div class="container">
-    <h2 class="section-title reveal" style="text-align:center;">
-      <span class="grad-text">InstaMagnético</span> é para você?
-    </h2>
-
-    <div class="forwho-grid">
-      <div class="forwho-col yes">
+  <div class="wrap">
+    <div style="text-align:center">
+      <div class="label rv" style="margin-bottom:14px">DESCUBRA AGORA</div>
+      <h2 class="h2 rv"><span class="gt">InstaMagnético</span><br>é pra você?</h2>
+    </div>
+    <div class="fw-grid">
+      <div class="fw-col yes">
         <h3>✅ SIM, É PRA VOCÊ SE...</h3>
-        <div class="forwho-item reveal">
-          <span class="fw-icon">✅</span>
-          <span>Quer monetizar no Instagram sem aparecer e sem criar conteúdo do zero</span>
-        </div>
-        <div class="forwho-item reveal" style="transition-delay:0.1s">
-          <span class="fw-icon">✅</span>
-          <span>Está no nicho dark: afiliados, infoprodutos, lifestyle, conteúdo adulto permitido</span>
-        </div>
-        <div class="forwho-item reveal" style="transition-delay:0.2s">
-          <span class="fw-icon">✅</span>
-          <span>Quer crescer rápido e transformar seguidores em renda passiva</span>
-        </div>
-        <div class="forwho-item reveal" style="transition-delay:0.3s">
-          <span class="fw-icon">✅</span>
-          <span>Está disposto a postar consistentemente com conteúdo que já está pronto</span>
-        </div>
-        <div class="forwho-item reveal" style="transition-delay:0.4s">
-          <span class="fw-icon">✅</span>
-          <span>Quer a estratégia + o conteúdo + o suporte tudo em um lugar</span>
-        </div>
+        <div class="fw-item rv-l"><span class="fw-icon">✅</span><span>Quer monetizar no Instagram sem aparecer e sem criar conteúdo do zero</span></div>
+        <div class="fw-item rv-l" style="transition-delay:.1s"><span class="fw-icon">✅</span><span>Está no nicho dark: afiliados, infoprodutos, lifestyle, conteúdo adulto permitido</span></div>
+        <div class="fw-item rv-l" style="transition-delay:.2s"><span class="fw-icon">✅</span><span>Quer crescer rápido e transformar seguidores em renda passiva</span></div>
+        <div class="fw-item rv-l" style="transition-delay:.3s"><span class="fw-icon">✅</span><span>Está disposto a postar consistentemente com conteúdo pronto</span></div>
+        <div class="fw-item rv-l" style="transition-delay:.4s"><span class="fw-icon">✅</span><span>Quer estratégia + conteúdo + suporte tudo em um lugar</span></div>
       </div>
-
-      <div class="forwho-col no">
+      <div class="fw-col no">
         <h3>❌ NÃO É PRA VOCÊ SE...</h3>
-        <div class="forwho-item no-item reveal" style="transition-delay:0.05s">
-          <span class="fw-icon">❌</span>
-          <span>Quer resultados sem nenhum esforço e sem postar absolutamente nada</span>
-        </div>
-        <div class="forwho-item no-item reveal" style="transition-delay:0.15s">
-          <span class="fw-icon">❌</span>
-          <span>Não tem um mínimo de comprometimento para seguir a estratégia</span>
-        </div>
-        <div class="forwho-item no-item reveal" style="transition-delay:0.25s">
-          <span class="fw-icon">❌</span>
-          <span>Já está satisfeito com o crescimento atual do seu perfil</span>
-        </div>
-        <div class="forwho-item no-item reveal" style="transition-delay:0.35s">
-          <span class="fw-icon">❌</span>
-          <span>Quer só curtir as fotos sem nenhuma intenção de monetizar</span>
-        </div>
+        <div class="fw-item rv-r" style="transition-delay:.05s"><span class="fw-icon">❌</span><span>Quer resultados sem nenhum esforço e sem postar absolutamente nada</span></div>
+        <div class="fw-item rv-r" style="transition-delay:.15s"><span class="fw-icon">❌</span><span>Não tem comprometimento mínimo para seguir a estratégia</span></div>
+        <div class="fw-item rv-r" style="transition-delay:.25s"><span class="fw-icon">❌</span><span>Já está satisfeito com o crescimento atual do seu perfil</span></div>
+        <div class="fw-item rv-r" style="transition-delay:.35s"><span class="fw-icon">❌</span><span>Quer só curtir fotos sem nenhuma intenção de monetizar</span></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════
-     OFERTA / PREÇO
-══════════════════════════════════════════════ -->
-<section id="pricing">
-  <div class="container">
-    <h2 class="section-title reveal" style="text-align:center;">
-      Tudo isso por<br><span class="grad-text">muito menos</span> do que vale
-    </h2>
-    <p class="section-sub reveal" style="text-align:center; margin:0 auto 0;">
-      Você está a um clique de ter conteúdo premium, estratégia exclusiva e suporte real — por menos de um jantar.
-    </p>
+<div class="fdiv"></div>
 
-    <div class="price-box reveal">
-      <ul class="price-summary">
-        <li><span>📦 Pack Premium de Vídeos Lifestyle Milionário</span><span class="item-val">R$ 297</span></li>
-        <li><span>🎬 Bônus 1: Pack Cenas de Filmes & Acontecimentos</span><span class="item-val">R$ 197</span></li>
-        <li><span>🎯 Bônus 2: Acompanhamento Estratégico + Análise</span><span class="item-val">R$ 203</span></li>
+<!-- ════════════════════════════════
+     PREÇO
+════════════════════════════════ -->
+<section id="pricing">
+  <div class="wrap">
+    <div style="text-align:center">
+      <div class="label rv" style="margin-bottom:14px">OFERTA LIMITADA</div>
+      <h2 class="h2 rv">Tudo isso por<br><span class="gt">muito menos do que vale</span></h2>
+      <p class="rv" style="font-size:16px;color:rgba(255,255,255,.5);max-width:520px;margin:12px auto 0;line-height:1.7">
+        Conteúdo premium + estratégia + suporte por menos de um jantar.
+      </p>
+    </div>
+    <div class="pbox rv">
+      <ul class="pstack">
+        <li><span>📦 Pack Premium — Vídeos Lifestyle Milionário</span><span class="pval">R$ 297</span></li>
+        <li><span>🎬 Bônus 1 — Pack Cenas de Filmes & Acontecimentos</span><span class="pval">R$ 197</span></li>
+        <li><span>🎯 Bônus 2 — Acompanhamento Estratégico + Análise</span><span class="pval">R$ 203</span></li>
       </ul>
-      <div class="price-divider"></div>
-      <div style="text-align:center;">
-        <div style="font-size:14px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:6px;">Valor total</div>
-        <div class="price-old">R$ 697</div>
-        <div class="price-crossed">R$ 297</div>
-        <div style="font-size:14px; color:var(--orange); margin-bottom:8px; letter-spacing:1px;">⚡ HOJE SOMENTE</div>
-        <div class="price-main grad-text">
-          <span class="price-tag">R$</span>97
-        </div>
-        <div class="price-parcel">ou 12x de <strong style="color:rgba(255,255,255,0.7);">R$ 9,08</strong> no cartão</div>
+      <div class="divider"></div>
+      <div>
+        <div class="p-total-lbl">valor total</div>
+        <div class="p-strike1">R$ 697</div>
+        <div class="p-strike2">R$ 297</div>
+        <div class="p-tag">⚡ HOJE APENAS</div>
+        <div class="p-main gt"><span class="p-curr">R$</span>97</div>
+        <div class="p-parcel">ou <strong>12x de R$ 9,08</strong> sem juros no cartão</div>
       </div>
-      <div class="price-divider"></div>
-      <a href="#" class="cta-btn" style="display:block; width:100%; margin:0 auto; max-width:500px;">
-        🔥 QUERO ACESSO AGORA — R$ 97
-      </a>
-      <div class="security-badges">
-        <div class="sec-badge"><span>🔒</span> SSL Seguro</div>
-        <div class="sec-badge"><span>💳</span> Cartão / Pix / Boleto</div>
-        <div class="sec-badge"><span>⚡</span> Acesso Imediato</div>
+      <div class="divider"></div>
+      <a href="#" class="cta" style="display:flex;width:100%;max-width:520px;margin:0 auto"><span>🔥 QUERO ACESSO AGORA — R$ 97</span></a>
+      <div class="sec-row">
+        <div class="sbadge"><em>🔒</em> Pagamento SSL</div>
+        <div class="sbadge"><em>💳</em> Cartão / Pix / Boleto</div>
+        <div class="sbadge"><em>⚡</em> Acesso Imediato</div>
+        <div class="sbadge"><em>🛡️</em> Compra Segura</div>
       </div>
       <div class="guarantee">
         <strong>🛡️ Garantia Incondicional de 7 Dias</strong><br>
-        Se por qualquer motivo você não ficar 100% satisfeito, devolvemos todo o seu dinheiro. Sem perguntas, sem burocracia.
+        Se por qualquer motivo você não ficar 100% satisfeito, devolvemos todo o seu dinheiro. Sem perguntas, sem burocracia. O risco é completamente nosso.
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════
+<div class="fdiv"></div>
+
+<!-- ════════════════════════════════
      FAQ
-══════════════════════════════════════════════ -->
+════════════════════════════════ -->
 <section id="faq">
-  <div class="container">
-    <h2 class="section-title reveal" style="text-align:center; max-width:500px; margin:0 auto 10px;">
-      Perguntas<br><span class="grad-text">Frequentes</span>
-    </h2>
-    <p style="text-align:center; color:rgba(255,255,255,0.5); margin-bottom:0;" class="reveal">Tira todas as dúvidas antes de entrar.</p>
-
+  <div class="wrap">
+    <div style="text-align:center">
+      <div class="label rv" style="margin-bottom:14px">TIRE SUAS DÚVIDAS</div>
+      <h2 class="h2 rv" style="max-width:480px;margin:0 auto">Perguntas<br><span class="gt">Frequentes</span></h2>
+    </div>
     <div class="faq-list">
-      <div class="faq-item reveal">
-        <button class="faq-q">
-          Como vou receber o material?
-          <div class="faq-arrow">▼</div>
-        </button>
-        <div class="faq-a">
-          Após a confirmação do pagamento, você recebe acesso imediato via e-mail com o link para download de todo o material. Funciona 24 horas por dia, 7 dias por semana — inclusive de madrugada. Você compra agora e já tá baixando em minutos.
-        </div>
+      <div class="fi rv">
+        <button class="fq">Como vou receber o material?<div class="fa-arrow">▼</div></button>
+        <div class="fa">Após confirmar o pagamento, você recebe acesso imediato via e-mail com o link para download de todo o material. Funciona 24h por dia, 7 dias por semana — você compra agora e já tá baixando em minutos.</div>
       </div>
-
-      <div class="faq-item reveal" style="transition-delay:0.1s">
-        <button class="faq-q">
-          Preciso ter experiência com Instagram?
-          <div class="faq-arrow">▼</div>
-        </button>
-        <div class="faq-a">
-          Zero. O pack foi feito exatamente para quem está começando do zero ou para quem já tem perfil mas não consegue crescer. Os vídeos são prontos, o bônus de análise de perfil te orienta do início, e o acompanhamento estratégico garante que você não vai ficar perdido em nenhum momento.
-        </div>
+      <div class="fi rv" style="transition-delay:.1s">
+        <button class="fq">Preciso ter experiência com Instagram?<div class="fa-arrow">▼</div></button>
+        <div class="fa">Zero. O pack foi feito exatamente para quem está começando ou para quem já tem perfil mas não cresce. Os vídeos são prontos, o bônus de análise orienta desde o início, e o acompanhamento garante que você não fica perdido em nenhum momento.</div>
       </div>
-
-      <div class="faq-item reveal" style="transition-delay:0.2s">
-        <button class="faq-q">
-          Funciona para qualquer nicho dark?
-          <div class="faq-arrow">▼</div>
-        </button>
-        <div class="faq-a">
-          Sim! O conteúdo foi pensado para funcionar em diferentes nichos dark: marketing de afiliados, infoprodutos, lifestyle milionário, conteúdo adulto permitido (dentro dos termos do Instagram), motivacional e mais. A estética é universal para o público que você quer atrair.
-        </div>
+      <div class="fi rv" style="transition-delay:.2s">
+        <button class="fq">Funciona para qualquer nicho dark?<div class="fa-arrow">▼</div></button>
+        <div class="fa">Sim! Funciona para afiliados, infoprodutos, lifestyle milionário, conteúdo adulto permitido (dentro dos termos do Instagram), motivacional e mais. A estética dark é universal para o público que você quer atrair.</div>
       </div>
-
-      <div class="faq-item reveal" style="transition-delay:0.3s">
-        <button class="faq-q">
-          E se eu não gostar?
-          <div class="faq-arrow">▼</div>
-        </button>
-        <div class="faq-a">
-          Você tem <strong style="color:#4ade80;">7 dias de garantia incondicional</strong>. Se por qualquer motivo — ou por nenhum — você não ficar satisfeito, é só entrar em contato e devolvemos 100% do seu investimento. Sem perguntas, sem demora. O risco é todo nosso.
-        </div>
+      <div class="fi rv" style="transition-delay:.3s">
+        <button class="fq">E se eu não gostar?<div class="fa-arrow">▼</div></button>
+        <div class="fa">Você tem <strong style="color:#4ade80">7 dias de garantia incondicional</strong>. Se por qualquer motivo — ou por nenhum — você não ficar satisfeito, basta entrar em contato e devolvemos 100% do seu investimento. Sem perguntas, sem demora.</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════
+<div class="fdiv"></div>
+
+<!-- ════════════════════════════════
      FOOTER
-══════════════════════════════════════════════ -->
+════════════════════════════════ -->
 <footer>
-  <div class="container">
-    <div class="footer-cta reveal">
-      <h2>Não deixa o<br><span class="grad-text">algoritmo te ignorar</span><br>mais um dia</h2>
-      <p style="color:rgba(255,255,255,0.5); margin-bottom:28px; font-size:16px;">
-        O pack está esperando por você. Baixa. Posta. Viraliza. Fatura. 🔥
-      </p>
-      <a href="#pricing" class="cta-btn">
-        🚀 QUERO MEU PACK AGORA — R$ 97
-      </a>
+  <div class="wrap">
+    <div class="rv">
+      <h2 class="footer-h">Não deixa o algoritmo<br><span class="gt">te ignorar</span><br>mais um dia</h2>
+      <p class="footer-sub">O pack está esperando. Baixa. Posta. Viraliza. Fatura. 🔥</p>
+      <a href="#pricing" class="cta"><span>🚀 QUERO MEU PACK — R$ 97</span></a>
     </div>
 
-    <div style="height:1px; background:linear-gradient(90deg,transparent,rgba(255,106,0,0.3),transparent); margin:40px 0;"></div>
+    <div class="fdiv" style="margin-top:50px"></div>
 
-    <div class="footer-copy">
-      <strong style="font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:2px;" class="grad-text">INSTAMAGNÉTICO</strong><br>
-      © 2025 InstaMagnético. Todos os direitos reservados.
-    </div>
-
+    <div class="footer-logo rv"><span class="gt">INSTAMAGNÉTICO</span></div>
+    <div class="footer-copy">© 2025 InstaMagnético. Todos os direitos reservados.</div>
     <div class="footer-legal">
       Este produto é destinado exclusivamente a maiores de 18 anos. Os resultados apresentados nos depoimentos são individuais e não representam garantia de resultado. O sucesso depende de múltiplos fatores incluindo dedicação, nicho e consistência. InstaMagnético não é afiliado ao Instagram/Meta. Imagens e marcas registradas são propriedade de seus respectivos donos.
     </div>
   </div>
 </footer>
 
-<!-- ══════════════════════════════════════════════
+<!-- ════════════════════════════════
      JAVASCRIPT
-══════════════════════════════════════════════ -->
+════════════════════════════════ -->
 <script>
-// ─── PARTICLE CANVAS ───────────────────────────
-(function() {
-  const canvas = document.getElementById('particle-canvas');
-  const ctx = canvas.getContext('2d');
-  let W, H, particles = [], mouse = { x: -9999, y: -9999 };
-
-  const COLORS = ['#FF6A00','#CC0000','#FFB300','#FF3D00','#FF8C42','#FFD166'];
+/* ─────────────────────────────────────────────
+   FIRE PARTICLE SYSTEM
+   Canvas-based embers & sparks reacting to mouse
+───────────────────────────────────────────── */
+(function FireParticles() {
+  const cvs = document.getElementById('cvs');
+  const ctx = cvs.getContext('2d');
+  let W, H, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const mouse = { x: -9999, y: -9999 };
+  const COLORS = [
+    [255, 106, 0], [204, 0, 0], [255, 179, 0],
+    [255, 61, 0],  [255, 140, 42],[255, 209, 102]
+  ];
+  let pool = [];
 
   function resize() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
+    W = window.innerWidth; H = window.innerHeight;
+    cvs.width = W * dpr; cvs.height = H * dpr;
+    cvs.style.width = W + 'px'; cvs.style.height = H + 'px';
+    ctx.scale(dpr, dpr);
   }
 
-  function createParticle() {
-    const x = Math.random() * W;
-    return {
-      x,
-      y: H + Math.random() * 100,
-      vx: (Math.random() - 0.5) * 0.6,
-      vy: -(Math.random() * 1.5 + 0.5),
-      size: Math.random() * 3 + 1,
-      color: COLORS[Math.floor(Math.random() * COLORS.length)],
-      alpha: Math.random() * 0.6 + 0.1,
-      life: Math.random() * 200 + 100,
-      age: 0,
-      wobble: Math.random() * Math.PI * 2,
-      wobbleSpeed: (Math.random() - 0.5) * 0.04
-    };
+  function Ember() {
+    this.reset();
   }
-
-  function initParticles() {
-    particles = [];
-    const count = Math.min(Math.floor(W * 0.05), 80);
-    for (let i = 0; i < count; i++) {
-      const p = createParticle();
-      p.y = Math.random() * H;
-      p.age = Math.random() * p.life;
-      particles.push(p);
+  Ember.prototype.reset = function() {
+    this.x = Math.random() * W;
+    this.y = H + 20 + Math.random() * 60;
+    this.vx = (Math.random() - .5) * .8;
+    this.vy = -(Math.random() * 1.8 + .4);
+    this.r = Math.random() * 2.8 + .6;
+    const c = COLORS[Math.floor(Math.random() * COLORS.length)];
+    this.cr = c[0]; this.cg = c[1]; this.cb = c[2];
+    this.alpha = Math.random() * .55 + .15;
+    this.life = Math.random() * 220 + 80;
+    this.age = Math.random() < .4 ? Math.random() * this.life : 0;
+    this.wobble = Math.random() * Math.PI * 2;
+    this.ws = (Math.random() - .5) * .055;
+    this.trail = [];
+  };
+  Ember.prototype.update = function() {
+    this.age++;
+    if (this.age > this.life) { this.reset(); return; }
+    this.wobble += this.ws;
+    const dx = this.x - mouse.x, dy = this.y - mouse.y;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    if (d < 130) {
+      const f = (130 - d) / 130 * .7;
+      this.x += dx / (d + 1) * f;
+      this.y += dy / (d + 1) * f;
     }
+    this.trail.push({ x: this.x, y: this.y });
+    if (this.trail.length > 5) this.trail.shift();
+    this.x += this.vx + Math.sin(this.wobble) * .5;
+    this.y += this.vy;
+    this.vy *= .999;
+  };
+  Ember.prototype.draw = function() {
+    const p = this.age / this.life;
+    const a = this.alpha * (p < .15 ? p / .15 : p > .75 ? (1 - p) / .25 : 1);
+    if (a <= 0) return;
+    // Trail
+    if (this.trail.length > 1) {
+      ctx.beginPath();
+      ctx.moveTo(this.trail[0].x, this.trail[0].y);
+      for (let i = 1; i < this.trail.length; i++) ctx.lineTo(this.trail[i].x, this.trail[i].y);
+      ctx.strokeStyle = `rgba(${this.cr},${this.cg},${this.cb},${a * .25})`;
+      ctx.lineWidth = this.r * .6;
+      ctx.stroke();
+    }
+    // Glow
+    const grd = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r * 4);
+    grd.addColorStop(0, `rgba(${this.cr},${this.cg},${this.cb},${a * .6})`);
+    grd.addColorStop(1, `rgba(${this.cr},${this.cg},${this.cb},0)`);
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r * 4, 0, Math.PI * 2);
+    ctx.fillStyle = grd;
+    ctx.fill();
+    // Core
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${this.cr},${this.cg},${this.cb},${a})`;
+    ctx.fill();
+  };
+
+  function initPool() {
+    const count = Math.min(Math.floor(W * .06), 90);
+    pool = Array.from({ length: count }, () => new Ember());
   }
 
+  let raf;
   function loop() {
     ctx.clearRect(0, 0, W, H);
-
-    // spawn
-    if (particles.length < 80 && Math.random() < 0.3) {
-      particles.push(createParticle());
-    }
-
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i];
-      p.age++;
-      if (p.age > p.life) { particles.splice(i, 1); continue; }
-
-      p.wobble += p.wobbleSpeed;
-      p.x += p.vx + Math.sin(p.wobble) * 0.4;
-      p.y += p.vy;
-
-      // mouse repulsion
-      const dx = p.x - mouse.x;
-      const dy = p.y - mouse.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < 120) {
-        const force = (120 - dist) / 120 * 0.5;
-        p.x += dx / dist * force;
-        p.y += dy / dist * force;
-      }
-
-      const progress = p.age / p.life;
-      const alpha = p.alpha * (progress < 0.2 ? progress / 0.2 : progress > 0.8 ? (1 - progress) / 0.2 : 1);
-
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fillStyle = p.color + Math.round(alpha * 255).toString(16).padStart(2,'0');
-      ctx.fill();
-
-      // glow
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = p.color;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-
-    requestAnimationFrame(loop);
+    // Spawn extras
+    if (pool.length < 90 && Math.random() < .25) pool.push(new Ember());
+    pool.forEach(e => { e.update(); e.draw(); });
+    raf = requestAnimationFrame(loop);
   }
 
   window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
@@ -1352,147 +919,131 @@
     if (e.touches.length) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }
   }, { passive: true });
 
-  resize();
-  initParticles();
-  loop();
-  window.addEventListener('resize', () => { resize(); initParticles(); });
+  resize(); initPool(); loop();
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(raf);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    resize(); initPool(); loop();
+  });
 })();
 
-// ─── SCROLL PROGRESS + BACK TO TOP ─────────────
-(function() {
-  const bar = document.getElementById('scroll-progress');
-  const btn = document.getElementById('back-top');
-
+/* ─────────────────────────────────────────────
+   SCROLL PROGRESS + BACK TO TOP
+───────────────────────────────────────────── */
+(function ScrollUI() {
+  const sp = document.getElementById('sp');
+  const btt = document.getElementById('btt');
   window.addEventListener('scroll', () => {
-    const scrolled = window.scrollY;
-    const total = document.documentElement.scrollHeight - window.innerHeight;
-    bar.style.width = (scrolled / total * 100) + '%';
-
-    if (scrolled > 300) btn.classList.add('visible');
-    else btn.classList.remove('visible');
+    const s = window.scrollY, h = document.documentElement.scrollHeight - innerHeight;
+    sp.style.width = (s / h * 100) + '%';
+    btt.classList.toggle('show', s > 300);
   }, { passive: true });
 })();
 
-// ─── INTERSECTION OBSERVER ──────────────────────
-(function() {
-  const reveals = document.querySelectorAll('.reveal, .reveal-clip, .forwho-item');
-  const obs = new IntersectionObserver((entries) => {
-    entries.forEach((entry, idx) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-      }
-    });
-  }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
-
-  reveals.forEach(el => obs.observe(el));
+/* ─────────────────────────────────────────────
+   INTERSECTION OBSERVER — REVEAL
+───────────────────────────────────────────── */
+(function RevealObserver() {
+  const els = document.querySelectorAll('.rv,.rv-l,.rv-r,.rv-clip,.fw-item');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(en => { if (en.isIntersecting) en.target.classList.add('on'); });
+  }, { threshold: .12, rootMargin: '0px 0px -50px 0px' });
+  els.forEach(el => obs.observe(el));
 })();
 
-// ─── BONUS UNLOCK ANIMATION ─────────────────────
-(function() {
-  const bonusCards = document.querySelectorAll('.bonus-card');
-  const obs = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        setTimeout(() => entry.target.classList.add('unlocked'), 300);
-      }
+/* ─────────────────────────────────────────────
+   BONUS UNLOCK ANIMATION
+───────────────────────────────────────────── */
+(function BonusUnlock() {
+  const cards = document.querySelectorAll('.bonus-card');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (en.isIntersecting) setTimeout(() => en.target.classList.add('unlocked'), 350);
     });
-  }, { threshold: 0.3 });
-  bonusCards.forEach(c => obs.observe(c));
+  }, { threshold: .3 });
+  cards.forEach(c => obs.observe(c));
 })();
 
-// ─── TYPEWRITER ─────────────────────────────────
-(function() {
-  const el = document.getElementById('typewriter-target');
+/* ─────────────────────────────────────────────
+   TYPEWRITER
+───────────────────────────────────────────── */
+(function Typewriter() {
+  const el = document.getElementById('tw');
   const texts = [
     'Conteúdo premium editado, pronto para viralizar. Só baixar e postar. 🔥',
     'Transforme seu Instagram numa máquina magnética de seguidores e dinheiro. 💰',
-    'Vídeos com estética dark que param o scroll e criam obsessão na audiência. 📲',
+    'Vídeos dark com estética milionária que param o scroll e criam obsessão. 📲',
+    'O segredo dos perfis que faturam no Instagram sem aparecer. 🚀',
   ];
-  let ti = 0, ci = 0, deleting = false, pauseTimer = null;
-
-  function type() {
-    const text = texts[ti];
-    if (!deleting) {
-      el.textContent = text.slice(0, ci + 1);
-      ci++;
-      if (ci === text.length) {
-        deleting = true;
-        pauseTimer = setTimeout(type, 2400);
-        return;
-      }
-    } else {
-      el.textContent = text.slice(0, ci - 1);
-      ci--;
-      if (ci === 0) {
-        deleting = false;
-        ti = (ti + 1) % texts.length;
-      }
-    }
-    setTimeout(type, deleting ? 30 : 50);
+  let ti = 0, ci = 0, del = false;
+  function run() {
+    const t = texts[ti];
+    el.textContent = del ? t.slice(0, --ci) : t.slice(0, ++ci);
+    if (!del && ci === t.length) { del = true; setTimeout(run, 2600); return; }
+    if (del && ci === 0) { del = false; ti = (ti + 1) % texts.length; }
+    setTimeout(run, del ? 25 : 52);
   }
-  type();
+  run();
 })();
 
-// ─── COUNTDOWN ──────────────────────────────────
-(function() {
-  const KEY = 'instamagnetico_deadline';
-  let deadline = localStorage.getItem(KEY);
-  if (!deadline) {
-    deadline = Date.now() + 24 * 60 * 60 * 1000;
-    localStorage.setItem(KEY, deadline);
-  }
-  deadline = parseInt(deadline);
-
-  const hEl = document.getElementById('cd-h');
-  const mEl = document.getElementById('cd-m');
-  const sEl = document.getElementById('cd-s');
-
-  function pad(n) { return String(n).padStart(2, '0'); }
-
+/* ─────────────────────────────────────────────
+   COUNTDOWN
+───────────────────────────────────────────── */
+(function Countdown() {
+  const KEY = 'im_deadline_v2';
+  let dl = +localStorage.getItem(KEY) || 0;
+  if (!dl || dl < Date.now()) { dl = Date.now() + 24 * 3600 * 1000; localStorage.setItem(KEY, dl); }
+  const h = document.getElementById('cdh'), m = document.getElementById('cdm'), s = document.getElementById('cds');
+  const p = n => String(n).padStart(2, '0');
   function tick() {
-    const diff = Math.max(0, deadline - Date.now());
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    hEl.textContent = pad(h);
-    mEl.textContent = pad(m);
-    sEl.textContent = pad(s);
-    if (diff > 0) setTimeout(tick, 1000);
+    const d = Math.max(0, dl - Date.now());
+    h.textContent = p(Math.floor(d / 3600000));
+    m.textContent = p(Math.floor(d % 3600000 / 60000));
+    s.textContent = p(Math.floor(d % 60000 / 1000));
+    if (d > 0) setTimeout(tick, 1000);
   }
   tick();
 })();
 
-// ─── RIPPLE ON CTA BUTTONS ──────────────────────
-document.querySelectorAll('.cta-btn').forEach(btn => {
+/* ─────────────────────────────────────────────
+   RIPPLE ON CTA
+───────────────────────────────────────────── */
+document.querySelectorAll('.cta').forEach(btn => {
   btn.addEventListener('click', function(e) {
     const r = document.createElement('span');
     r.className = 'ripple';
     const rect = this.getBoundingClientRect();
-    const size = Math.max(rect.width, rect.height);
-    r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+    const sz = Math.max(rect.width, rect.height);
+    Object.assign(r.style, {
+      width: sz + 'px', height: sz + 'px',
+      left: (e.clientX - rect.left - sz / 2) + 'px',
+      top: (e.clientY - rect.top - sz / 2) + 'px'
+    });
     this.appendChild(r);
-    setTimeout(() => r.remove(), 600);
+    setTimeout(() => r.remove(), 700);
   });
 });
 
-// ─── FAQ ACCORDION ──────────────────────────────
-document.querySelectorAll('.faq-q').forEach(btn => {
+/* ─────────────────────────────────────────────
+   FAQ ACCORDION
+───────────────────────────────────────────── */
+document.querySelectorAll('.fq').forEach(btn => {
   btn.addEventListener('click', function() {
     const item = this.parentElement;
-    const isOpen = item.classList.contains('open');
-    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
-    if (!isOpen) item.classList.add('open');
+    const open = item.classList.contains('open');
+    document.querySelectorAll('.fi').forEach(i => i.classList.remove('open'));
+    if (!open) item.classList.add('open');
   });
 });
 
-// ─── SMOOTH ANCHOR SCROLLING ────────────────────
+/* ─────────────────────────────────────────────
+   SMOOTH ANCHORS
+───────────────────────────────────────────── */
 document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', function(e) {
-    const target = document.querySelector(this.getAttribute('href'));
-    if (target) {
-      e.preventDefault();
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+  a.addEventListener('click', e => {
+    const t = document.querySelector(a.getAttribute('href'));
+    if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
 });
 </script>
