@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InstaMagnético — Vídeos Prontos. Post. Viraliza. Fatura.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange: #FF6A00;
+    --red: #CC0000;
+    --gold: #FFB300;
+    --coral: #FF3D00;
+    --dark: #080808;
+    --dark2: #0f0f0f;
+    --dark3: #161616;
+    --glass: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,106,0,0.2);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--dark);
+    color: #e8e8e8;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ─── NOISE GRAIN ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.6;
+  }
+
+  /* ─── SCROLL PROGRESS ─── */
+  #scroll-progress {
+    position: fixed;
+    top: 0; left: 0;
+    width: 0%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--orange), var(--gold), var(--coral));
+    z-index: 10000;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 10px var(--orange);
+  }
+
+  /* ─── BACK TO TOP ─── */
+  #back-top {
+    position: fixed;
+    bottom: 30px; right: 30px;
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--orange), var(--red));
+    border: none; border-radius: 50%;
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 9998;
+    box-shadow: 0 0 20px rgba(255,106,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+  }
+  #back-top.visible { opacity: 1; transform: translateY(0); }
+  #back-top:hover { box-shadow: 0 0 35px rgba(255,106,0,0.8); }
+
+  /* ─── CANVAS ─── */
+  #particle-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── SECTION BASE ─── */
+  section { position: relative; z-index: 1; }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  /* ─── GRADIENT TEXT ─── */
+  .grad-text {
+    background: linear-gradient(90deg, var(--orange), var(--gold), var(--coral), var(--orange));
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradShift 4s linear infinite;
+  }
+  @keyframes gradShift {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+
+  /* ─── REVEAL ANIMATION ─── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-clip {
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 0.9s cubic-bezier(0.16,1,0.3,1);
+  }
+  .reveal-clip.visible {
+    clip-path: inset(0 0% 0 0);
+  }
+
+  /* ─── CTA BUTTON ─── */
+  .cta-btn {
+    display: inline-block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(18px, 3vw, 26px);
+    letter-spacing: 2px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--orange) 0%, var(--coral) 50%, var(--red) 100%);
+    border: none;
+    padding: 18px 48px;
+    border-radius: 60px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 30px rgba(255,106,0,0.5), 0 0 60px rgba(255,106,0,0.2);
+    animation: ctaPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes ctaPulse {
+    0%, 100% { box-shadow: 0 0 30px rgba(255,106,0,0.5), 0 0 60px rgba(255,106,0,0.2); }
+    50% { box-shadow: 0 0 50px rgba(255,106,0,0.9), 0 0 100px rgba(255,106,0,0.4); }
+  }
+  .cta-btn::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    background: conic-gradient(from 0deg, var(--orange), var(--gold), var(--coral), var(--orange));
+    border-radius: 63px;
+    z-index: -1;
+    animation: rotateBorder 3s linear infinite;
+  }
+  @keyframes rotateBorder {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .cta-btn:hover { transform: scale(1.04); }
+  .cta-btn .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    transform: scale(0);
+    animation: rippleAnim 0.6s linear;
+    pointer-events: none;
+  }
+  @keyframes rippleAnim {
+    to { transform: scale(4); opacity: 0; }
+  }
+
+  /* ─── HERO ─── */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 20px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  #hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 60%, rgba(204,0,0,0.15) 0%, rgba(255,106,0,0.08) 40%, transparent 70%);
+    animation: heroBg 8s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes heroBg {
+    from { transform: scale(1) translateY(0); }
+    to { transform: scale(1.1) translateY(-20px); }
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,106,0,0.12);
+    border: 1px solid rgba(255,106,0,0.3);
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 8px 20px;
+    border-radius: 30px;
+    margin-bottom: 28px;
+    animation: badgeBounce 3s ease-in-out infinite;
+  }
+  @keyframes badgeBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .hero-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(54px, 10vw, 120px);
+    line-height: 0.9;
+    margin-bottom: 24px;
+    position: relative;
+    filter: drop-shadow(0 0 40px rgba(255,106,0,0.3));
+    animation: fireText 3s ease-in-out infinite alternate;
+  }
+  @keyframes fireText {
+    from { filter: drop-shadow(0 0 30px rgba(255,106,0,0.3)); }
+    to { filter: drop-shadow(0 0 60px rgba(255,106,0,0.7)) drop-shadow(0 0 100px rgba(204,0,0,0.3)); }
+  }
+
+  .hero-sub {
+    font-size: clamp(16px, 2.5vw, 22px);
+    color: rgba(255,255,255,0.75);
+    max-width: 620px;
+    margin: 0 auto 40px;
+    line-height: 1.6;
+    min-height: 60px;
+  }
+
+  .hero-badges-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 28px;
+  }
+  .mini-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.8);
+  }
+  .mini-badge span { font-size: 16px; }
+
+  /* ─── COUNTDOWN ─── */
+  #countdown-wrap {
+    margin: 36px 0;
+  }
+  .countdown-label {
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+  .countdown {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+  }
+  .cd-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .cd-box {
+    background: var(--dark3);
+    border: 1px solid var(--orange);
+    border-radius: 10px;
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px;
+    color: var(--gold);
+    box-shadow: 0 0 20px rgba(255,106,0,0.3), inset 0 0 20px rgba(255,106,0,0.05);
+    position: relative;
+    overflow: hidden;
+  }
+  .cd-box::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background: rgba(255,106,0,0.4);
+    top: 50%;
+  }
+  .cd-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+  }
+  .cd-sep {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    color: var(--orange);
+    margin-bottom: 20px;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ─── PAIN SECTION ─── */
+  #pain {
+    padding: 100px 0;
+    background: linear-gradient(180deg, var(--dark) 0%, var(--dark2) 50%, var(--dark) 100%);
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 6vw, 68px);
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+  .section-sub {
+    font-size: 17px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 60px;
+    max-width: 600px;
+  }
+  .pain-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+  .pain-card {
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(204,0,0,0.2);
+    border-radius: 16px;
+    padding: 28px 24px;
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+  }
+  .pain-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 40px rgba(204,0,0,0.2);
+    border-color: rgba(204,0,0,0.5);
+  }
+  .pain-icon { font-size: 32px; margin-bottom: 14px; }
+  .pain-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: #fff; }
+  .pain-card p { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+
+  /* ─── PRODUCT SECTION ─── */
+  #product {
+    padding: 100px 0;
+  }
+  .product-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+  }
+  @media (max-width: 768px) { .product-grid { grid-template-columns: 1fr; } }
+
+  .phone-mockup {
+    position: relative;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+  .phone-frame {
+    width: 100%;
+    aspect-ratio: 9/19;
+    background: linear-gradient(160deg, #1a1a1a 0%, #0a0a0a 100%);
+    border-radius: 40px;
+    border: 2px solid rgba(255,106,0,0.3);
+    box-shadow: 0 0 60px rgba(255,106,0,0.2), 0 0 120px rgba(204,0,0,0.1), inset 0 0 40px rgba(0,0,0,0.8);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .phone-frame::before {
+    content: '';
+    position: absolute;
+    top: 16px; left: 50%;
+    transform: translateX(-50%);
+    width: 80px; height: 10px;
+    background: #111;
+    border-radius: 10px;
+  }
+  .phone-screen-content {
+    text-align: center;
+    padding: 20px;
+  }
+  .phone-viral {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--orange), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: viralPulse 2s ease-in-out infinite;
+  }
+  @keyframes viralPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  .phone-stat { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 8px; letter-spacing: 2px; }
+  .phone-stat strong { color: var(--orange); display: block; font-size: 22px; font-family: 'Bebas Neue', sans-serif; }
+  .phone-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 80%, rgba(255,106,0,0.15) 0%, transparent 60%);
+    animation: phoneGlow 3s ease-in-out infinite alternate;
+  }
+  @keyframes phoneGlow {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+  }
+
+  .product-list { list-style: none; }
+  .product-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 15px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.85);
+  }
+  .product-list li:last-child { border-bottom: none; }
+  .check-icon {
+    width: 24px; height: 24px;
+    background: linear-gradient(135deg, var(--orange), var(--red));
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 12px;
+    margin-top: 1px;
+    box-shadow: 0 0 10px rgba(255,106,0,0.4);
+  }
+
+  /* ─── BONUS SECTION ─── */
+  #bonus {
+    padding: 100px 0;
+    background: var(--dark2);
+  }
+  .bonus-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-top: 60px;
+  }
+  .bonus-card {
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 36px 28px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .bonus-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1.5px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--orange), var(--gold), var(--coral), var(--red));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  .bonus-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 60px rgba(255,106,0,0.2);
+  }
+  .lock-icon {
+    font-size: 40px;
+    margin-bottom: 16px;
+    display: block;
+    transition: transform 0.5s;
+  }
+  .bonus-card.unlocked .lock-icon { animation: unlockBounce 0.6s ease; }
+  @keyframes unlockBounce {
+    0% { transform: rotate(-10deg) scale(0.8); }
+    50% { transform: rotate(10deg) scale(1.2); }
+    100% { transform: rotate(0deg) scale(1); }
+  }
+  .bonus-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--orange);
+    background: rgba(255,106,0,0.1);
+    border: 1px solid rgba(255,106,0,0.3);
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+  .bonus-card h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: #fff;
+    margin-bottom: 10px;
+    line-height: 1.1;
+  }
+  .bonus-card p { font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.6; margin-bottom: 20px; }
+  .bonus-value {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .bonus-old { text-decoration: line-through; color: rgba(255,255,255,0.3); font-size: 16px; }
+  .bonus-free {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+
+  /* ─── TESTIMONIALS ─── */
+  #testimonials {
+    padding: 100px 0;
+  }
+  .testi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-top: 60px;
+  }
+  .testi-card {
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    padding: 28px 24px;
+    transition: transform 0.3s, border-color 0.3s;
+  }
+  .testi-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255,106,0,0.3);
+  }
+  .testi-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .avatar {
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(255,106,0,0.3);
+  }
+  .testi-name { font-weight: 700; font-size: 15px; color: #fff; }
+  .testi-handle { font-size: 12px; color: rgba(255,255,255,0.4); }
+  .stars { color: var(--gold); font-size: 14px; margin-bottom: 12px; }
+  .testi-card p { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.65; }
+  .testi-result {
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: rgba(255,106,0,0.08);
+    border-left: 3px solid var(--orange);
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  /* ─── FOR WHO ─── */
+  #forwho {
+    padding: 100px 0;
+    background: var(--dark2);
+  }
+  .forwho-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-top: 60px;
+  }
+  @media (max-width: 640px) { .forwho-grid { grid-template-columns: 1fr; } }
+  .forwho-col h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    margin-bottom: 24px;
+    letter-spacing: 1px;
+  }
+  .forwho-col.yes h3 { color: #4ade80; }
+  .forwho-col.no h3 { color: #f87171; }
+  .forwho-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 15px;
+    color: rgba(255,255,255,0.8);
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: opacity 0.4s, transform 0.4s;
+  }
+  .forwho-item.no-item { transform: translateX(20px); }
+  .forwho-item.visible { opacity: 1; transform: translateX(0); }
+  .forwho-item .fw-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ─── PRICING ─── */
+  #pricing {
+    padding: 100px 0;
+    text-align: center;
+  }
+  .price-box {
+    background: linear-gradient(160deg, rgba(255,106,0,0.06) 0%, rgba(204,0,0,0.04) 100%);
+    border: 1px solid rgba(255,106,0,0.25);
+    border-radius: 24px;
+    padding: 50px 40px;
+    max-width: 700px;
+    margin: 40px auto 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .price-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(255,106,0,0.12) 0%, transparent 60%);
+  }
+  .price-summary { list-style: none; margin-bottom: 36px; }
+  .price-summary li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 15px;
+    color: rgba(255,255,255,0.75);
+  }
+  .price-summary li:last-child { border-bottom: none; }
+  .price-summary .item-val { color: var(--gold); font-weight: 600; font-size: 13px; }
+  .price-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--orange), transparent); margin: 24px 0; }
+  .price-old {
+    font-size: 22px;
+    color: rgba(255,255,255,0.3);
+    text-decoration: line-through;
+    margin-bottom: 4px;
+  }
+  .price-crossed {
+    font-size: 30px;
+    color: rgba(255,255,255,0.4);
+    text-decoration: line-through;
+    margin-bottom: 8px;
+  }
+  .price-main {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(70px, 12vw, 110px);
+    line-height: 0.9;
+    letter-spacing: -2px;
+  }
+  .price-tag {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    color: rgba(255,255,255,0.5);
+    vertical-align: super;
+    margin-right: 4px;
+  }
+  .price-parcel {
+    margin-top: 10px;
+    font-size: 15px;
+    color: rgba(255,255,255,0.5);
+  }
+  .security-badges {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 28px;
+  }
+  .sec-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+  }
+  .sec-badge span { font-size: 16px; }
+  .guarantee {
+    margin-top: 28px;
+    padding: 20px;
+    border: 1px dashed rgba(255,255,255,0.15);
+    border-radius: 12px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.6;
+  }
+  .guarantee strong { color: #4ade80; }
+
+  /* ─── FAQ ─── */
+  #faq {
+    padding: 100px 0;
+    background: var(--dark2);
+  }
+  .faq-list { max-width: 720px; margin: 60px auto 0; }
+  .faq-item {
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .faq-item.open { border-color: rgba(255,106,0,0.35); }
+  .faq-q {
+    width: 100%;
+    background: var(--glass);
+    border: none;
+    padding: 20px 24px;
+    text-align: left;
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    transition: background 0.2s;
+  }
+  .faq-q:hover { background: rgba(255,255,255,0.05); }
+  .faq-arrow {
+    width: 28px; height: 28px;
+    background: rgba(255,106,0,0.1);
+    border: 1px solid rgba(255,106,0,0.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px;
+    color: var(--orange);
+    transition: transform 0.4s;
+  }
+  .faq-item.open .faq-arrow { transform: rotate(180deg); }
+  .faq-a {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+    font-size: 14px;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.7;
+    padding: 0 24px;
+  }
+  .faq-item.open .faq-a {
+    max-height: 300px;
+    padding: 0 24px 20px;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    padding: 80px 0 40px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    text-align: center;
+  }
+  .footer-cta { margin-bottom: 50px; }
+  .footer-cta h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 6vw, 64px);
+    margin-bottom: 20px;
+  }
+  .footer-legal {
+    font-size: 12px;
+    color: rgba(255,255,255,0.25);
+    line-height: 1.7;
+    max-width: 700px;
+    margin: 30px auto 0;
+  }
+  .footer-copy {
+    margin-top: 30px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.2);
+  }
+
+  /* ─── RESPONSIVE UTILS ─── */
+  @media (max-width: 480px) {
+    .cd-box { width: 56px; height: 56px; font-size: 28px; }
+    .price-box { padding: 36px 20px; }
+    #back-top { bottom: 20px; right: 20px; }
+  }
+
+  /* ─── SECTION DIVIDERS ─── */
+  .flame-divider {
+    text-align: center;
+    font-size: 28px;
+    padding: 20px 0;
+    opacity: 0.6;
+    letter-spacing: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Scroll Progress -->
+<div id="scroll-progress"></div>
+
+<!-- Back to Top -->
+<button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Voltar ao topo">↑</button>
+
+<!-- Particle Canvas -->
+<canvas id="particle-canvas"></canvas>
+
+<!-- ══════════════════════════════════════════════
+     HERO
+══════════════════════════════════════════════ -->
+<section id="hero">
+  <div class="container">
+    <div class="hero-badge reveal">🔥 PACK EXCLUSIVO PARA INSTAGRAM</div>
+
+    <h1 class="hero-headline reveal-clip">
+      <span class="grad-text">Vídeos Prontos.</span><br>
+      Post. Viraliza.<br>
+      <span class="grad-text">Fatura.</span>
+    </h1>
+
+    <p class="hero-sub reveal" id="typewriter-target"></p>
+
+    <div id="countdown-wrap" class="reveal">
+      <div class="countdown-label">⚡ Oferta expira em</div>
+      <div class="countdown">
+        <div class="cd-unit">
+          <div class="cd-box" id="cd-h">00</div>
+          <div class="cd-label">Horas</div>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit">
+          <div class="cd-box" id="cd-m">00</div>
+          <div class="cd-label">Min</div>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit">
+          <div class="cd-box" id="cd-s">00</div>
+          <div class="cd-label">Seg</div>
+        </div>
+      </div>
+    </div>
+
+    <a href="#pricing" class="cta-btn reveal" id="hero-cta">
+      🔥 QUERO MEU PACK AGORA — R$ 97
+    </a>
+
+    <div class="hero-badges-row reveal">
+      <div class="mini-badge"><span>⚡</span> Acesso Imediato</div>
+      <div class="mini-badge"><span>💎</span> Pacote Premium</div>
+      <div class="mini-badge"><span>🔒</span> Pagamento Seguro</div>
+      <div class="mini-badge"><span>✅</span> Garantia 7 Dias</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     DOR / PROBLEMA
+══════════════════════════════════════════════ -->
+<section id="pain">
+  <div class="container">
+    <div style="text-align:center; margin-bottom:16px;">
+      <div class="flame-divider">🔥 🔥 🔥</div>
+    </div>
+    <h2 class="section-title reveal" style="text-align:center; max-width:800px; margin:0 auto 16px;">
+      Você já se perguntou por que alguns perfis<br>
+      <span class="grad-text">explodem</span> enquanto o seu fica estagnado?
+    </h2>
+    <p class="section-sub reveal" style="text-align:center; margin:0 auto 60px;">
+      A verdade é que não é falta de talento. É falta do conteúdo certo, na hora certa.
+    </p>
+
+    <div class="pain-grid">
+      <div class="pain-card reveal">
+        <div class="pain-icon">😩</div>
+        <h3>Horas perdidas criando do zero</h3>
+        <p>Você passa o dia inteiro editando um vídeo que não passa de 200 views. Enquanto isso, outros faturam dormindo.</p>
+      </div>
+      <div class="pain-card reveal" style="transition-delay:0.1s">
+        <div class="pain-icon">📉</div>
+        <h3>Algoritmo te ignorando</h3>
+        <p>Sua conta não cresce porque o conteúdo não tem o padrão que o Instagram reconhece como viral. Simples assim.</p>
+      </div>
+      <div class="pain-card reveal" style="transition-delay:0.2s">
+        <div class="pain-icon">🤯</div>
+        <h3>Sem saber o que postar</h3>
+        <p>Todo dia a mesma angústia: "O que eu posto hoje?" Enquanto concorrentes já têm meses de conteúdo prontos.</p>
+      </div>
+      <div class="pain-card reveal" style="transition-delay:0.3s">
+        <div class="pain-icon">💸</div>
+        <h3>Dinheiro na mesa todo mês</h3>
+        <p>Cada dia sem crescer é um dia sem faturar. Seguidores = audiência = dinheiro. A equação é simples — o acesso é que faltava.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     PRODUTO
+══════════════════════════════════════════════ -->
+<section id="product">
+  <div class="container">
+    <div class="product-grid">
+      <div>
+        <h2 class="section-title reveal">
+          O Pack que vai transformar seu perfil numa<br>
+          <span class="grad-text">máquina de viralizar</span>
+        </h2>
+        <p style="font-size:16px; color:rgba(255,255,255,0.6); margin-bottom:32px;" class="reveal">
+          Conteúdo profissional, editado com estética dark premium e alta retenção — pronto para você baixar, postar e ver os números explodirem.
+        </p>
+        <ul class="product-list">
+          <li class="reveal">
+            <div class="check-icon">✓</div>
+            <span><strong style="color:#fff">Vídeos de Lifestyle Milionário</strong> — estética dark, editados para máxima retenção e desejo</span>
+          </li>
+          <li class="reveal" style="transition-delay:0.1s">
+            <div class="check-icon">✓</div>
+            <span><strong style="color:#fff">Alta retenção garantida</strong> — formato otimizado para o algoritmo do Reels e Stories</span>
+          </li>
+          <li class="reveal" style="transition-delay:0.15s">
+            <div class="check-icon">✓</div>
+            <span><strong style="color:#fff">Estética única e magnética</strong> — visual que para o scroll e cria obsessão imediata</span>
+          </li>
+          <li class="reveal" style="transition-delay:0.2s">
+            <div class="check-icon">✓</div>
+            <span><strong style="color:#fff">Funciona para qualquer nicho dark</strong> — afiliados, infoprodutos, conteúdo adulto permitido e mais</span>
+          </li>
+          <li class="reveal" style="transition-delay:0.25s">
+            <div class="check-icon">✓</div>
+            <span><strong style="color:#fff">Acesso imediato ao download</strong> — baixe agora e poste hoje mesmo</span>
+          </li>
+        </ul>
+      </div>
+      <div class="phone-mockup reveal">
+        <div class="phone-frame">
+          <div class="phone-glow"></div>
+          <div class="phone-screen-content">
+            <div class="phone-viral">VIRAL</div>
+            <div class="phone-stat">
+              <strong>🔥 2.4M</strong>
+              visualizações
+            </div>
+            <div style="margin-top:20px; padding:10px; border:1px solid rgba(255,106,0,0.3); border-radius:8px;">
+              <div style="font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:1px; margin-bottom:4px;">NOVOS SEGUIDORES</div>
+              <div style="font-family:'Bebas Neue',sans-serif; font-size:28px; color:#4ade80;">+1.847</div>
+              <div style="font-size:10px; color:rgba(255,255,255,0.3);">em 48 horas</div>
+            </div>
+            <div style="margin-top:16px; font-size:10px; color:rgba(255,179,0,0.7); letter-spacing:1px;">📲 INSTAMAGNÉTICO</div>
+          </div>
+        </div>
+        <div style="position:absolute; top:-20px; right:-20px; width:60px; height:60px; background:radial-gradient(circle, var(--orange), transparent); opacity:0.4; border-radius:50%; animation:phoneGlow 3s infinite;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     BÔNUS
+══════════════════════════════════════════════ -->
+<section id="bonus">
+  <div class="container">
+    <div style="text-align:center;">
+      <div class="flame-divider">🔒 🔒 🔒</div>
+      <h2 class="section-title reveal">
+        E ainda vai ganhar isso tudo de<br>
+        <span class="grad-text">BÔNUS</span> 🔥
+      </h2>
+      <p class="section-sub reveal" style="margin:0 auto;">
+        Só porque você chegou até aqui, estes bônus exclusivos estão sendo desbloqueados agora.
+      </p>
+    </div>
+
+    <div class="bonus-grid">
+      <div class="bonus-card reveal">
+        <span class="lock-icon" id="lock1">🎬</span>
+        <div class="bonus-tag">Bônus 1 — Desbloqueado</div>
+        <h3>Pack de Cenas de Filmes & Acontecimentos</h3>
+        <p>Cenas icônicas dos maiores filmes e acontecimentos virais da história. Adicione qualquer legenda, qualquer headline — e viraliza instantaneamente. O conteúdo já é magnético. Você só escolhe a mensagem.</p>
+        <div class="bonus-value">
+          <span class="bonus-old">R$ 197</span>
+          <span class="bonus-free">GRÁTIS 🎁</span>
+        </div>
+      </div>
+
+      <div class="bonus-card reveal" style="transition-delay:0.15s">
+        <span class="lock-icon" id="lock2">🎯</span>
+        <div class="bonus-tag">Bônus 2 — Desbloqueado</div>
+        <h3>Acompanhamento Estratégico + Análise de Perfil</h3>
+        <p>Você não vai ficar sozinho. Orientação personalizada para crescer e monetizar seu perfil dark. Análise individual, estratégia sob medida para seu nicho e suporte direto. O atalho que ninguém te ofereceu.</p>
+        <div class="bonus-value">
+          <span class="bonus-old">R$ 203</span>
+          <span class="bonus-free">GRÁTIS 🎁</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     DEPOIMENTOS
+══════════════════════════════════════════════ -->
+<section id="testimonials">
+  <div class="container">
+    <h2 class="section-title reveal" style="text-align:center;">
+      Quem usou,<br><span class="grad-text">não para mais</span>
+    </h2>
+
+    <div class="testi-grid">
+      <div class="testi-card reveal">
+        <div class="testi-header">
+          <div class="avatar" style="background:linear-gradient(135deg,#FF6A00,#CC0000);">MF</div>
+          <div>
+            <div class="testi-name">Mateus Ferreira</div>
+            <div class="testi-handle">@mateusf.dark</div>
+          </div>
+        </div>
+        <div class="stars">★★★★★</div>
+        <p>"Cara, eu tinha travado no mesmo número de seguidores por 3 meses. Baixei o pack, postei 5 vídeos em uma semana e explodiu. O algoritmo simplesmente te joga pra frente com esse tipo de conteúdo."</p>
+        <div class="testi-result">🚀 +1.200 seguidores em 7 dias</div>
+      </div>
+
+      <div class="testi-card reveal" style="transition-delay:0.12s">
+        <div class="testi-header">
+          <div class="avatar" style="background:linear-gradient(135deg,#FFB300,#FF3D00);">JA</div>
+          <div>
+            <div class="testi-name">Juliana Alves</div>
+            <div class="testi-handle">@ju.lifestyle.dark</div>
+          </div>
+        </div>
+        <div class="stars">★★★★★</div>
+        <p>"Na segunda semana já tinha feito R$ 500 de afiliado. Nunca tinha conseguido isso antes. A estética dos vídeos é absurda — as pessoas param e assistem até o fim. Retenção total."</p>
+        <div class="testi-result">💰 Primeiro R$ 500 na semana 2</div>
+      </div>
+
+      <div class="testi-card reveal" style="transition-delay:0.24s">
+        <div class="testi-header">
+          <div class="avatar" style="background:linear-gradient(135deg,#CC0000,#FF6A00);">RC</div>
+          <div>
+            <div class="testi-name">Rafael Costa</div>
+            <div class="testi-handle">@rafaelcosta.empire</div>
+          </div>
+        </div>
+        <div class="stars">★★★★★</div>
+        <p>"Fui de 300 para 4.800 seguidores em um mês. Monetizei com produto digital e fechei R$ 1.400 sem ter aparecido uma vez no perfil. O pack de filmes então... é uma máquina de viralizar."</p>
+        <div class="testi-result">📲 De 300 para 4.800 em 30 dias</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     PARA QUEM É?
+══════════════════════════════════════════════ -->
+<section id="forwho">
+  <div class="container">
+    <h2 class="section-title reveal" style="text-align:center;">
+      <span class="grad-text">InstaMagnético</span> é para você?
+    </h2>
+
+    <div class="forwho-grid">
+      <div class="forwho-col yes">
+        <h3>✅ SIM, É PRA VOCÊ SE...</h3>
+        <div class="forwho-item reveal">
+          <span class="fw-icon">✅</span>
+          <span>Quer monetizar no Instagram sem aparecer e sem criar conteúdo do zero</span>
+        </div>
+        <div class="forwho-item reveal" style="transition-delay:0.1s">
+          <span class="fw-icon">✅</span>
+          <span>Está no nicho dark: afiliados, infoprodutos, lifestyle, conteúdo adulto permitido</span>
+        </div>
+        <div class="forwho-item reveal" style="transition-delay:0.2s">
+          <span class="fw-icon">✅</span>
+          <span>Quer crescer rápido e transformar seguidores em renda passiva</span>
+        </div>
+        <div class="forwho-item reveal" style="transition-delay:0.3s">
+          <span class="fw-icon">✅</span>
+          <span>Está disposto a postar consistentemente com conteúdo que já está pronto</span>
+        </div>
+        <div class="forwho-item reveal" style="transition-delay:0.4s">
+          <span class="fw-icon">✅</span>
+          <span>Quer a estratégia + o conteúdo + o suporte tudo em um lugar</span>
+        </div>
+      </div>
+
+      <div class="forwho-col no">
+        <h3>❌ NÃO É PRA VOCÊ SE...</h3>
+        <div class="forwho-item no-item reveal" style="transition-delay:0.05s">
+          <span class="fw-icon">❌</span>
+          <span>Quer resultados sem nenhum esforço e sem postar absolutamente nada</span>
+        </div>
+        <div class="forwho-item no-item reveal" style="transition-delay:0.15s">
+          <span class="fw-icon">❌</span>
+          <span>Não tem um mínimo de comprometimento para seguir a estratégia</span>
+        </div>
+        <div class="forwho-item no-item reveal" style="transition-delay:0.25s">
+          <span class="fw-icon">❌</span>
+          <span>Já está satisfeito com o crescimento atual do seu perfil</span>
+        </div>
+        <div class="forwho-item no-item reveal" style="transition-delay:0.35s">
+          <span class="fw-icon">❌</span>
+          <span>Quer só curtir as fotos sem nenhuma intenção de monetizar</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     OFERTA / PREÇO
+══════════════════════════════════════════════ -->
+<section id="pricing">
+  <div class="container">
+    <h2 class="section-title reveal" style="text-align:center;">
+      Tudo isso por<br><span class="grad-text">muito menos</span> do que vale
+    </h2>
+    <p class="section-sub reveal" style="text-align:center; margin:0 auto 0;">
+      Você está a um clique de ter conteúdo premium, estratégia exclusiva e suporte real — por menos de um jantar.
+    </p>
+
+    <div class="price-box reveal">
+      <ul class="price-summary">
+        <li><span>📦 Pack Premium de Vídeos Lifestyle Milionário</span><span class="item-val">R$ 297</span></li>
+        <li><span>🎬 Bônus 1: Pack Cenas de Filmes & Acontecimentos</span><span class="item-val">R$ 197</span></li>
+        <li><span>🎯 Bônus 2: Acompanhamento Estratégico + Análise</span><span class="item-val">R$ 203</span></li>
+      </ul>
+      <div class="price-divider"></div>
+      <div style="text-align:center;">
+        <div style="font-size:14px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:6px;">Valor total</div>
+        <div class="price-old">R$ 697</div>
+        <div class="price-crossed">R$ 297</div>
+        <div style="font-size:14px; color:var(--orange); margin-bottom:8px; letter-spacing:1px;">⚡ HOJE SOMENTE</div>
+        <div class="price-main grad-text">
+          <span class="price-tag">R$</span>97
+        </div>
+        <div class="price-parcel">ou 12x de <strong style="color:rgba(255,255,255,0.7);">R$ 9,08</strong> no cartão</div>
+      </div>
+      <div class="price-divider"></div>
+      <a href="#" class="cta-btn" style="display:block; width:100%; margin:0 auto; max-width:500px;">
+        🔥 QUERO ACESSO AGORA — R$ 97
+      </a>
+      <div class="security-badges">
+        <div class="sec-badge"><span>🔒</span> SSL Seguro</div>
+        <div class="sec-badge"><span>💳</span> Cartão / Pix / Boleto</div>
+        <div class="sec-badge"><span>⚡</span> Acesso Imediato</div>
+      </div>
+      <div class="guarantee">
+        <strong>🛡️ Garantia Incondicional de 7 Dias</strong><br>
+        Se por qualquer motivo você não ficar 100% satisfeito, devolvemos todo o seu dinheiro. Sem perguntas, sem burocracia.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     FAQ
+══════════════════════════════════════════════ -->
+<section id="faq">
+  <div class="container">
+    <h2 class="section-title reveal" style="text-align:center; max-width:500px; margin:0 auto 10px;">
+      Perguntas<br><span class="grad-text">Frequentes</span>
+    </h2>
+    <p style="text-align:center; color:rgba(255,255,255,0.5); margin-bottom:0;" class="reveal">Tira todas as dúvidas antes de entrar.</p>
+
+    <div class="faq-list">
+      <div class="faq-item reveal">
+        <button class="faq-q">
+          Como vou receber o material?
+          <div class="faq-arrow">▼</div>
+        </button>
+        <div class="faq-a">
+          Após a confirmação do pagamento, você recebe acesso imediato via e-mail com o link para download de todo o material. Funciona 24 horas por dia, 7 dias por semana — inclusive de madrugada. Você compra agora e já tá baixando em minutos.
+        </div>
+      </div>
+
+      <div class="faq-item reveal" style="transition-delay:0.1s">
+        <button class="faq-q">
+          Preciso ter experiência com Instagram?
+          <div class="faq-arrow">▼</div>
+        </button>
+        <div class="faq-a">
+          Zero. O pack foi feito exatamente para quem está começando do zero ou para quem já tem perfil mas não consegue crescer. Os vídeos são prontos, o bônus de análise de perfil te orienta do início, e o acompanhamento estratégico garante que você não vai ficar perdido em nenhum momento.
+        </div>
+      </div>
+
+      <div class="faq-item reveal" style="transition-delay:0.2s">
+        <button class="faq-q">
+          Funciona para qualquer nicho dark?
+          <div class="faq-arrow">▼</div>
+        </button>
+        <div class="faq-a">
+          Sim! O conteúdo foi pensado para funcionar em diferentes nichos dark: marketing de afiliados, infoprodutos, lifestyle milionário, conteúdo adulto permitido (dentro dos termos do Instagram), motivacional e mais. A estética é universal para o público que você quer atrair.
+        </div>
+      </div>
+
+      <div class="faq-item reveal" style="transition-delay:0.3s">
+        <button class="faq-q">
+          E se eu não gostar?
+          <div class="faq-arrow">▼</div>
+        </button>
+        <div class="faq-a">
+          Você tem <strong style="color:#4ade80;">7 dias de garantia incondicional</strong>. Se por qualquer motivo — ou por nenhum — você não ficar satisfeito, é só entrar em contato e devolvemos 100% do seu investimento. Sem perguntas, sem demora. O risco é todo nosso.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-cta reveal">
+      <h2>Não deixa o<br><span class="grad-text">algoritmo te ignorar</span><br>mais um dia</h2>
+      <p style="color:rgba(255,255,255,0.5); margin-bottom:28px; font-size:16px;">
+        O pack está esperando por você. Baixa. Posta. Viraliza. Fatura. 🔥
+      </p>
+      <a href="#pricing" class="cta-btn">
+        🚀 QUERO MEU PACK AGORA — R$ 97
+      </a>
+    </div>
+
+    <div style="height:1px; background:linear-gradient(90deg,transparent,rgba(255,106,0,0.3),transparent); margin:40px 0;"></div>
+
+    <div class="footer-copy">
+      <strong style="font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:2px;" class="grad-text">INSTAMAGNÉTICO</strong><br>
+      © 2025 InstaMagnético. Todos os direitos reservados.
+    </div>
+
+    <div class="footer-legal">
+      Este produto é destinado exclusivamente a maiores de 18 anos. Os resultados apresentados nos depoimentos são individuais e não representam garantia de resultado. O sucesso depende de múltiplos fatores incluindo dedicação, nicho e consistência. InstaMagnético não é afiliado ao Instagram/Meta. Imagens e marcas registradas são propriedade de seus respectivos donos.
+    </div>
+  </div>
+</footer>
+
+<!-- ══════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════ -->
+<script>
+// ─── PARTICLE CANVAS ───────────────────────────
+(function() {
+  const canvas = document.getElementById('particle-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [], mouse = { x: -9999, y: -9999 };
+
+  const COLORS = ['#FF6A00','#CC0000','#FFB300','#FF3D00','#FF8C42','#FFD166'];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function createParticle() {
+    const x = Math.random() * W;
+    return {
+      x,
+      y: H + Math.random() * 100,
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: -(Math.random() * 1.5 + 0.5),
+      size: Math.random() * 3 + 1,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      alpha: Math.random() * 0.6 + 0.1,
+      life: Math.random() * 200 + 100,
+      age: 0,
+      wobble: Math.random() * Math.PI * 2,
+      wobbleSpeed: (Math.random() - 0.5) * 0.04
+    };
+  }
+
+  function initParticles() {
+    particles = [];
+    const count = Math.min(Math.floor(W * 0.05), 80);
+    for (let i = 0; i < count; i++) {
+      const p = createParticle();
+      p.y = Math.random() * H;
+      p.age = Math.random() * p.life;
+      particles.push(p);
+    }
+  }
+
+  function loop() {
+    ctx.clearRect(0, 0, W, H);
+
+    // spawn
+    if (particles.length < 80 && Math.random() < 0.3) {
+      particles.push(createParticle());
+    }
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.age++;
+      if (p.age > p.life) { particles.splice(i, 1); continue; }
+
+      p.wobble += p.wobbleSpeed;
+      p.x += p.vx + Math.sin(p.wobble) * 0.4;
+      p.y += p.vy;
+
+      // mouse repulsion
+      const dx = p.x - mouse.x;
+      const dy = p.y - mouse.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 120) {
+        const force = (120 - dist) / 120 * 0.5;
+        p.x += dx / dist * force;
+        p.y += dy / dist * force;
+      }
+
+      const progress = p.age / p.life;
+      const alpha = p.alpha * (progress < 0.2 ? progress / 0.2 : progress > 0.8 ? (1 - progress) / 0.2 : 1);
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = p.color + Math.round(alpha * 255).toString(16).padStart(2,'0');
+      ctx.fill();
+
+      // glow
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = p.color;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+  window.addEventListener('touchmove', e => {
+    if (e.touches.length) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }
+  }, { passive: true });
+
+  resize();
+  initParticles();
+  loop();
+  window.addEventListener('resize', () => { resize(); initParticles(); });
+})();
+
+// ─── SCROLL PROGRESS + BACK TO TOP ─────────────
+(function() {
+  const bar = document.getElementById('scroll-progress');
+  const btn = document.getElementById('back-top');
+
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (scrolled / total * 100) + '%';
+
+    if (scrolled > 300) btn.classList.add('visible');
+    else btn.classList.remove('visible');
+  }, { passive: true });
+})();
+
+// ─── INTERSECTION OBSERVER ──────────────────────
+(function() {
+  const reveals = document.querySelectorAll('.reveal, .reveal-clip, .forwho-item');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((entry, idx) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+
+  reveals.forEach(el => obs.observe(el));
+})();
+
+// ─── BONUS UNLOCK ANIMATION ─────────────────────
+(function() {
+  const bonusCards = document.querySelectorAll('.bonus-card');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('unlocked'), 300);
+      }
+    });
+  }, { threshold: 0.3 });
+  bonusCards.forEach(c => obs.observe(c));
+})();
+
+// ─── TYPEWRITER ─────────────────────────────────
+(function() {
+  const el = document.getElementById('typewriter-target');
+  const texts = [
+    'Conteúdo premium editado, pronto para viralizar. Só baixar e postar. 🔥',
+    'Transforme seu Instagram numa máquina magnética de seguidores e dinheiro. 💰',
+    'Vídeos com estética dark que param o scroll e criam obsessão na audiência. 📲',
+  ];
+  let ti = 0, ci = 0, deleting = false, pauseTimer = null;
+
+  function type() {
+    const text = texts[ti];
+    if (!deleting) {
+      el.textContent = text.slice(0, ci + 1);
+      ci++;
+      if (ci === text.length) {
+        deleting = true;
+        pauseTimer = setTimeout(type, 2400);
+        return;
+      }
+    } else {
+      el.textContent = text.slice(0, ci - 1);
+      ci--;
+      if (ci === 0) {
+        deleting = false;
+        ti = (ti + 1) % texts.length;
+      }
+    }
+    setTimeout(type, deleting ? 30 : 50);
+  }
+  type();
+})();
+
+// ─── COUNTDOWN ──────────────────────────────────
+(function() {
+  const KEY = 'instamagnetico_deadline';
+  let deadline = localStorage.getItem(KEY);
+  if (!deadline) {
+    deadline = Date.now() + 24 * 60 * 60 * 1000;
+    localStorage.setItem(KEY, deadline);
+  }
+  deadline = parseInt(deadline);
+
+  const hEl = document.getElementById('cd-h');
+  const mEl = document.getElementById('cd-m');
+  const sEl = document.getElementById('cd-s');
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function tick() {
+    const diff = Math.max(0, deadline - Date.now());
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    hEl.textContent = pad(h);
+    mEl.textContent = pad(m);
+    sEl.textContent = pad(s);
+    if (diff > 0) setTimeout(tick, 1000);
+  }
+  tick();
+})();
+
+// ─── RIPPLE ON CTA BUTTONS ──────────────────────
+document.querySelectorAll('.cta-btn').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    const r = document.createElement('span');
+    r.className = 'ripple';
+    const rect = this.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+    this.appendChild(r);
+    setTimeout(() => r.remove(), 600);
+  });
+});
+
+// ─── FAQ ACCORDION ──────────────────────────────
+document.querySelectorAll('.faq-q').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const item = this.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  });
+});
+
+// ─── SMOOTH ANCHOR SCROLLING ────────────────────
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', function(e) {
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+</script>
+</body>
+</html>
